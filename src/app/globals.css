@@ -3,23 +3,14 @@
 @tailwind utilities;
 
 :root {
-  --background: #080d1a;
-  --foreground: #f8fafc;
-  --card: #0f172a;
-  --card-foreground: #f8fafc;
-  --border: #334155;
-  --accent-cyan: #06b6d4;
+  --background: #212121;
+  --foreground: #f4f4f5;
+  --card: #18181b;
+  --card-foreground: #f4f4f5;
+  --border: #3f3f46;
   --accent-emerald: #10b981;
   --accent-amber: #f59e0b;
   --accent-rose: #ef4444;
-}
-
-.light {
-  --background: #f8fafc;
-  --foreground: #0f172a;
-  --card: #ffffff;
-  --card-foreground: #0f172a;
-  --border: #cbd5e1;
 }
 
 body {
@@ -27,7 +18,6 @@ body {
   background: var(--background);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   overflow-x: hidden;
-  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 /* Custom technical scrollbar */
@@ -37,23 +27,19 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #080d1a;
-}
-
-.light ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #212121;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #334155;
-  border-radius: 2px;
+  background: #3f3f46;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: #52525b;
 }
 
-/* Print Stylesheet (Item 10) */
+/* Print Stylesheet */
 @media print {
   body {
     background: #ffffff !important;
@@ -63,9 +49,6 @@ body {
   header,
   nav,
   .no-print,
-  #cookie-banner,
-  #floating-contact,
-  #back-to-top,
   form {
     display: none !important;
   }
@@ -90,11 +73,5 @@ body {
     padding: 6px !important;
     color: #000000 !important;
     font-size: 10pt !important;
-  }
-
-  .audit-card {
-    border: 1px solid #000000 !important;
-    background: #ffffff !important;
-    color: #000000 !important;
   }
 }

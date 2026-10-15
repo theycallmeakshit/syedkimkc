@@ -3,100 +3,109 @@ import Link from "next/link";
 import { ArrowLeft, ShieldAlert, FileText, CheckCircle2, AlertTriangle } from "lucide-react";
 
 export const metadata = {
-  title: "Terms and Conditions | AEGIS-AI Enterprise Security Gateway",
-  description: "Terms of Service, Acceptable AI Use Guidelines, and Gateway Proxy Service Agreement.",
+  title: "Terms of Service | Aegis Guard",
+  description: "Terms and conditions of service for the Aegis Guard security gateway.",
 };
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-[#080d1a] text-slate-100 flex flex-col font-sans antialiased">
-      <header className="h-14 bg-[#0f172a] border-b border-[#334155] px-6 flex items-center justify-between sticky top-0 z-50">
+    <div className="min-h-screen bg-[#212121] text-zinc-100 flex flex-col font-sans antialiased">
+      <header className="h-14 bg-[#18181b] border-b border-zinc-800 px-6 flex items-center justify-between sticky top-0 z-30">
         <div className="flex items-center gap-3">
           <Link
             href="/"
-            className="flex items-center gap-2 text-xs font-mono text-cyan-400 hover:text-cyan-300 transition-colors"
+            className="flex items-center gap-2 text-xs font-mono text-zinc-400 hover:text-zinc-200 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>Return to Gateway</span>
+            <span>Return to gateway</span>
           </Link>
-          <span className="text-slate-600">|</span>
-          <span className="font-mono text-xs font-bold text-slate-200">
-            AEGIS-AI Terms and Conditions of Service
+          <span className="text-zinc-700">|</span>
+          <span className="text-xs font-semibold text-zinc-200">
+            Aegis Guard Terms of Service
           </span>
         </div>
-        <div className="text-[11px] font-mono text-slate-400">
-          Last Updated: October 15, 2026
+        <div className="text-[11px] font-mono text-zinc-500">
+          Last updated: October 15, 2026
         </div>
       </header>
 
-      <main id="main-content" className="flex-1 max-w-4xl w-full mx-auto p-6 md:p-10 space-y-8 text-xs leading-relaxed text-slate-300">
-        <div className="space-y-2 border-b border-[#334155] pb-6">
-          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded bg-slate-900 border border-slate-700 text-slate-300 font-mono text-[11px]">
-            <FileText className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Enterprise Gateway Proxy Agreement: Document Ref #AGY-TERMS-2026</span>
+      <main id="main-content" className="flex-1 max-w-3xl w-full mx-auto p-6 sm:p-10 space-y-8 text-xs leading-relaxed text-zinc-300">
+        <div className="space-y-2 border-b border-zinc-800 pb-6">
+          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-300 font-mono text-[11px]">
+            <FileText className="w-3.5 h-3.5 text-emerald-500" />
+            <span>Gateway Terms of Service: Reference AGY-TERMS-2026</span>
           </div>
-          <h1 className="text-2xl font-bold font-mono text-white tracking-tight">
-            Terms of Service & AI Gateway Operational Agreement
+          <h1 className="text-2xl font-bold text-zinc-100 tracking-tight">
+            Terms of Service
           </h1>
-          <p className="text-slate-400 text-sm">
-            Mandatory conditions governing all programmatic, interactive, and reverse-proxy usage of the AEGIS-AI boundary.
+          <p className="text-zinc-400 text-sm">
+            Conditions governing access to and usage of the Aegis Guard security boundary.
           </p>
         </div>
 
         <section className="space-y-3">
-          <h2 className="text-sm font-bold font-mono text-cyan-400 uppercase tracking-wider flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4" />
-            1. Scope of Reverse-Proxy Protection
+          <h2 className="text-sm font-semibold text-zinc-100 uppercase tracking-wider flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+            1. Gateway Purpose and Authorization
           </h2>
           <p>
-            By accessing or connecting an interface to the AEGIS-AI Gateway, organizations and authorized operators acknowledge that all payload transactions (text queries and multi-modal image buffers) will be subjected to the mandatory 7-stage evaluation pipeline prior to upstream dispatch.
+            Aegis Guard is provided for organizational testing and enforcement of generative AI security controls. By submitting queries to this gateway, you authorize the automated inspection, redaction, and access validation of all payload text and attached document images.
+          </p>
+          <p>
+            [Note: Confirm with legal counsel: Define the exact commercial licensing scope and authorized user boundaries for external partners versus internal staff.]
           </p>
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-sm font-bold font-mono text-rose-400 uppercase tracking-wider flex items-center gap-2">
-            <ShieldAlert className="w-4 h-4" />
-            2. Adversarial Injections and Prohibited Usage
+          <h2 className="text-sm font-semibold text-zinc-100 uppercase tracking-wider flex items-center gap-2">
+            <ShieldAlert className="w-4 h-4 text-red-400" />
+            2. Prohibited Conduct and Threat Neutralization
           </h2>
           <p>
-            Users and client systems are strictly prohibited from attempting to bypass, evade, or disable the security heuristic inspection engines. Prohibited actions include:
+            Users agree not to exploit, disable, or tamper with the gateway filters. Prohibited actions include:
           </p>
-          <ul className="list-disc pl-5 space-y-1.5 text-slate-400">
-            <li>Submitting direct or indirect jailbreak sequences (such as "ignore previous instructions" or "system override").</li>
-            <li>Submitting obfuscated payloads via Base64, hex encoding, or homoglyph character substitution with intent to conceal attack directives.</li>
-            <li>Probing or exfiltrating gateway canary keys (e.g. <code>AEGIS-CANARY-SEC-99823</code>) or underlying infrastructure configurations.</li>
+          <ul className="list-disc pl-5 space-y-1.5 text-zinc-400">
+            <li>Submitting instructions designed to bypass security rules (such as prompt override directives or system role usurpation).</li>
+            <li>Submitting obfuscated scripts or encodings intended to evade keyword and heuristic scanners.</li>
+            <li>Attempting unauthorized privilege escalation to access documents restricted to higher clearance tiers.</li>
           </ul>
           <p>
-            Any payload triggering a Stage 4 score equal to or exceeding 45/100 will immediately result in an automated HTTP 403 Forbidden rejection and immutable SOC telemetry registration.
+            Queries evaluated as malicious prompt injections will be rejected with an immediate HTTP 403 Forbidden status, and zero data will be forwarded to downstream models.
+          </p>
+          <p>
+            [Note: Confirm with legal counsel: Determine whether persistent adversarial attempts will trigger account suspension or notification to corporate security response teams.]
           </p>
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-sm font-bold font-mono text-amber-400 uppercase tracking-wider flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4" />
-            3. Role-Based Authorization
+          <h2 className="text-sm font-semibold text-zinc-100 uppercase tracking-wider flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-amber-400" />
+            3. Disclaimer of Upstream Output
           </h2>
           <p>
-            Clients must transmit valid credentials reflecting the appropriate privilege tier. The gateway will quarantine and drop document chunks that exceed the user's role authorization without exception. Attempting to spoof privilege headers constitutes a material breach of operational policy.
+            Aegis Guard filters inbound prompts and outbound model egress, but does not guarantee the factual accuracy, completeness, or suitability of responses generated by external large language models.
+          </p>
+          <p>
+            [Note: Confirm with legal counsel: Include explicit limitation of liability clauses under governing state or national laws regarding third-party AI model errors.]
           </p>
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-sm font-bold font-mono text-cyan-400 uppercase tracking-wider flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4" />
-            4. Service Availability & Telemetry
+          <h2 className="text-sm font-semibold text-zinc-100 uppercase tracking-wider flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+            4. Service Availability
           </h2>
           <p>
-            The gateway guarantees inline inspection overhead within target specifications (typically under 25 milliseconds per transaction). Statistical indicators displayed across the console represent real-time measurements computed across inspected transaction logs.
+            Gateway latency metrics are calculated dynamically based on local processing benchmarks. The gateway is provided on an as-available basis for enterprise security verification.
           </p>
         </section>
 
-        <section className="pt-6 border-t border-[#334155] flex items-center justify-between text-[11px] font-mono text-slate-400">
+        <section className="pt-6 border-t border-zinc-800 flex items-center justify-between text-[11px] font-mono text-zinc-500">
           <div>
-            Contact: <span className="text-slate-200">legal@aegis-ai.internal</span>
+            Contact: legal@aegisguard.internal
           </div>
           <div>
-            Contract ID: CC6-AI03-ENTERPRISE
+            Agreement Code: AGY-SVC-2026
           </div>
         </section>
       </main>

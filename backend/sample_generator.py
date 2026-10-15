@@ -5,7 +5,7 @@ import base64
 def generate_sample_pan_card() -> str:
     """Generates a realistic mock PAN card image and returns base64 PNG data URL."""
     w, h = 640, 400
-    # Background: Light sky blue / cyan gradient common on PAN cards
+    # Background: Light sky blue / cyan tint common on PAN cards
     img = np.full((h, w, 3), 245, dtype=np.uint8)
     img[:, :, 0] = 230  # Blue tint
     img[:, :, 1] = 240
