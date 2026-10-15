@@ -35,12 +35,22 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (pipelineResponse.status !== 200) {
+      return NextResponse.json(
+        {
+          error: pipelineResponse.error || "Gateway service error",
+          result: pipelineResponse.result,
+        },
+        { status: pipelineResponse.status }
+      );
+    }
+
     return NextResponse.json(
       {
         reply: pipelineResponse.reply,
         result: pipelineResponse.result,
       },
-      { status: pipelineResponse.status }
+      { status: 200 }
     );
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : "Internal gateway failure.";

@@ -403,7 +403,7 @@ export async function runGatewayPipeline(
         status: 502,
         error: `Upstream AI provider error: ${errMessage}`,
         result: {
-          action: "BLOCK",
+          action: "WARN",
           categories,
           rule: "Provider execution failed",
           overhead_ms: Math.round(scan_ms + policy_ms + rbac_ms),
