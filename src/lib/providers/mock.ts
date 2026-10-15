@@ -1,7 +1,10 @@
 import { GenerateOptions, GenerateResult, ProviderAdapter } from "./types";
 
 export class MockProviderAdapter implements ProviderAdapter {
+  static lastGenerateOptions?: GenerateOptions;
+
   async generate(options: GenerateOptions): Promise<GenerateResult> {
+    MockProviderAdapter.lastGenerateOptions = options;
     const userMsg = options.messages.filter((m) => m.role === "user").pop();
     const promptText = userMsg ? userMsg.content : "";
 

@@ -191,7 +191,6 @@ export function getGatewayFormatDirectAnswer(factItem: DerivedFactItem): string 
   }
   return "Format check: the input does not match standard email syntax format. This check applies to format only.";
 }
-
 /**
  * Builds the derived facts block to append to the system instructions.
  */

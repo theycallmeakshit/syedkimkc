@@ -136,21 +136,17 @@ function maskSensitiveForDisplay(text: string): string {
 
 function formatStepLine(timings?: StepTimings): string {
   if (!timings) return "";
-  if (timings.gateway_rule_answer) {
-    const gatewayMs = Math.round(timings.scan_ms + timings.policy_ms);
-    return `Answered by gateway rules (Gateway ${gatewayMs}ms)`;
-  }
-  const gatewayMs = Math.round(
-    timings.scan_ms + timings.policy_ms + timings.rbac_ms + timings.egress_ms
-  );
-  if (timings.is_dry_run) {
-    return `Gateway ${gatewayMs}ms, Dry run`;
-  }
-  if (timings.model_ms !== undefined) {
-    const modelSeconds = (timings.model_ms / 1000).toFixed(1);
-    return `Gateway ${gatewayMs}ms, Model ${modelSeconds}s`;
-  }
-  return `Gateway ${gatewayMs}ms`;
+  const scan = `${timings.scan_ms}ms`;
+  const policy = `${timings.policy_ms}ms`;
+  const role = timings.rbac_ms > 0 ? `${timings.rbac_ms}ms` : "skipped";
+  const model = timings.is_dry_run
+    ? "skipped (dry run)"
+    : timings.model_ms !== undefined
+    ? `${timings.model_ms}ms`
+    : "skipped";
+  const egress = timings.egress_ms > 0 ? `${timings.egress_ms}ms` : "skipped";
+
+  return `Scan (${scan}) -> Policy (${policy}) -> Role check (${role}) -> Model (${model}) -> Output check (${egress})`;
 }
 
 export default function AegisConversationalApp() {
@@ -171,7 +167,6 @@ export default function AegisConversationalApp() {
   // Input & Messaging
   const [promptInput, setPromptInput] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [elapsedTimeMs, setElapsedTimeMs] = useState<number>(0);
   const [attachedImage, setAttachedImage] = useState<string | null>(null);
   const [advisoryHint, setAdvisoryHint] = useState<{ text: string; type: "block" | "mask" } | null>(null);
   const [pasteWarning, setPasteWarning] = useState<string | null>(null);
@@ -219,18 +214,6 @@ export default function AegisConversationalApp() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-
-  useEffect(() => {
-    if (!isSubmitting) {
-      setElapsedTimeMs(0);
-      return;
-    }
-    const start = performance.now();
-    const interval = setInterval(() => {
-      setElapsedTimeMs(Math.round(performance.now() - start));
-    }, 100);
-    return () => clearInterval(interval);
-  }, [isSubmitting]);
 
   const handleToggleSidebar = () => {
     setIsSidebarOpen((prev) => {
@@ -803,12 +786,12 @@ export default function AegisConversationalApp() {
       <aside
         className={`${
           isMobile
-            ? `fixed inset-y-0 left-0 z-50 w-[260px] bg-zinc-900/70 backdrop-blur-xl border-r border-zinc-800/60 transition-transform duration-200 motion-reduce:transition-none ${
+            ? `fixed inset-y-0 left-0 z-50 w-[260px] bg-[#18181b] border-r border-zinc-800 transition-transform duration-200 motion-reduce:transition-none ${
                 isSidebarOpen ? "translate-x-0" : "-translate-x-full"
               }`
             : `${
                 isSidebarOpen ? "w-[260px]" : "w-0 -translate-x-full"
-              } shrink-0 bg-zinc-900/70 backdrop-blur-xl border-r border-zinc-800/60 transition-all duration-200 motion-reduce:transition-none overflow-hidden flex flex-col h-screen`
+              } shrink-0 bg-[#18181b] border-r border-zinc-800 transition-all duration-200 motion-reduce:transition-none overflow-hidden flex flex-col h-screen`
         } flex flex-col`}
       >
         {/* Top Wordmark & New Chat Button */}
@@ -1237,19 +1220,9 @@ export default function AegisConversationalApp() {
 
                       {/* Inline Masking Advisory Tag */}
                       {isMasked && (
-                        <div className="inline-flex items-center flex-wrap gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border text-amber-400 bg-amber-400/10 border-amber-400/20">
-                          <Shield className="w-3.5 h-3.5" />
+                        <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg text-xs font-medium border text-amber-400 bg-amber-400/10 border-amber-400/20 w-fit">
+                          <Shield className="w-3.5 h-3.5 shrink-0" />
                           <span>Sensitive entities sanitized before model dispatch</span>
-                          <button
-                            onClick={() => {
-                              if (msg.result) setLatestResult(msg.result);
-                              setInspectorTab("diff");
-                              setIsInspectorOpen(true);
-                            }}
-                            className="underline hover:text-amber-300 font-semibold ml-1 cursor-pointer"
-                          >
-                            [Inspect payload]
-                          </button>
                         </div>
                       )}
 
@@ -1327,10 +1300,10 @@ export default function AegisConversationalApp() {
                               setInspectorTab("diff");
                               setIsInspectorOpen(true);
                             }}
-                            className="inline-flex items-center gap-1 text-[11px] text-zinc-400 hover:text-zinc-200 transition-colors duration-150"
+                            className="inline-flex items-center gap-1.5 text-[11px] text-zinc-400 hover:text-zinc-200 transition-colors duration-150"
                           >
-                            <FileText className="w-3 h-3" />
-                            <span>View payload inspection</span>
+                            <FileText className="w-3.5 h-3.5" />
+                            <span>Inspect payload</span>
                           </button>
                         )}
                       </div>
@@ -1445,6 +1418,19 @@ export default function AegisConversationalApp() {
                             {latestResult.tokenized_prompt || "(Zero data forwarded)"}
                           </div>
                         </div>
+
+                        {/* Section 3: Derived Format Facts */}
+                        {latestResult.derived_facts_block && (
+                          <div className="space-y-1.5">
+                            <div className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider flex items-center justify-between">
+                              <span>Derived format facts (System instructions)</span>
+                              <span className="text-emerald-400 text-[10px]">Internal Facts</span>
+                            </div>
+                            <div className="p-3 rounded-xl border border-zinc-800 bg-zinc-900 text-zinc-200 font-mono text-xs leading-relaxed whitespace-pre-wrap break-all">
+                              {latestResult.derived_facts_block}
+                            </div>
+                          </div>
+                        )}
 
                         {/* Detected Entities */}
                         {latestResult.detected_entities && latestResult.detected_entities.length > 0 && (
