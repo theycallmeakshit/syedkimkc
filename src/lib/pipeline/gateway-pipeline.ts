@@ -3,7 +3,7 @@ import { detectInjection } from "../../config/injection-rules";
 import { globalAuditStore, AuditLogEntry } from "../audit-store";
 import { retrievePermittedRagChunks } from "../rag-store";
 import { getProviderAdapter } from "../providers";
-import { UserRole, verifyRoleToken, verifyUserToken } from "../auth";
+import { UserRole, verifyRoleToken } from "../auth";
 
 export interface PipelineEntityItem {
   type: "PAN" | "PHONE" | "EMAIL" | "API_KEY";
@@ -300,9 +300,8 @@ export async function runGatewayPipeline(
     };
   }
 
-  const { valid, user, role } = verifyUserToken(options.roleToken || "");
+  const { valid, role } = verifyRoleToken(options.roleToken || "");
   const callerRole: UserRole = valid ? role : "intern";
-  const canAccessTitan = user?.canAccessTitan ?? (callerRole === "executive");
 
   const rateLimitKey = options.roleToken || options.clientIp || "default";
   if (!checkRateLimit(rateLimitKey)) {
@@ -453,7 +452,7 @@ export async function runGatewayPipeline(
 
   // 5. Access-Controlled RAG (Role Filtered)
   const rbacStart = performance.now();
-  const ragResult = retrievePermittedRagChunks(sanitizedPrompt, callerRole, { canAccessTitan });
+  const ragResult = retrievePermittedRagChunks(sanitizedPrompt, callerRole);
   if (ragResult.hasRbacViolation) {
     categories.push("RBAC_VIOLATION");
   }

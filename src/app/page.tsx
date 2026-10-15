@@ -48,6 +48,7 @@ export interface StepTimings {
   model_ms?: number;
   egress_ms: number;
   is_dry_run?: boolean;
+  gateway_rule_answer?: boolean;
 }
 
 export interface ServerInspectionResult {
@@ -59,6 +60,7 @@ export interface ServerInspectionResult {
   hidden_length_blocks: string;
   tokenized_prompt: string;
   detected_entities: PipelineEntityItem[];
+  derived_facts_block?: string;
   rag_chunks_included?: string[];
   step_timings?: StepTimings;
   audit_entry?: {
@@ -770,7 +772,7 @@ export default function AegisConversationalApp() {
       : 0;
 
   return (
-    <div className="min-h-screen flex font-sans bg-[#212121] text-zinc-100 overflow-hidden">
+    <div className="min-h-screen flex font-sans bg-dot-matrix text-zinc-100 overflow-hidden">
       {/* Mobile Sidebar Backdrop */}
       {isMobile && isSidebarOpen && (
         <div
@@ -784,16 +786,16 @@ export default function AegisConversationalApp() {
       <aside
         className={`${
           isMobile
-            ? `fixed inset-y-0 left-0 z-50 w-[260px] bg-[#18181b] border-r border-zinc-800 transition-transform duration-200 motion-reduce:transition-none ${
+            ? `fixed inset-y-0 left-0 z-50 w-[260px] glass-sidebar transition-transform duration-200 motion-reduce:transition-none ${
                 isSidebarOpen ? "translate-x-0" : "-translate-x-full"
               }`
             : `${
                 isSidebarOpen ? "w-[260px]" : "w-0 -translate-x-full"
-              } shrink-0 bg-[#18181b] border-r border-zinc-800 transition-all duration-200 motion-reduce:transition-none overflow-hidden flex flex-col h-screen`
+              } shrink-0 glass-sidebar transition-all duration-200 motion-reduce:transition-none overflow-hidden flex flex-col h-screen`
         } flex flex-col`}
       >
         {/* Top Wordmark & New Chat Button */}
-        <div className="p-3 border-b border-zinc-800 flex flex-col gap-2 shrink-0">
+        <div className="p-3 border-b border-white/8 flex flex-col gap-2 shrink-0">
           <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-2 font-semibold text-sm text-zinc-100">
               <Shield className="w-4 h-4 text-emerald-500" />
@@ -802,7 +804,7 @@ export default function AegisConversationalApp() {
             {isMobile && (
               <button
                 onClick={() => setIsSidebarOpen(false)}
-                className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors duration-150"
+                className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-white/10 transition-colors duration-150"
                 aria-label="Close sidebar"
               >
                 <X className="w-4 h-4" />
@@ -812,7 +814,7 @@ export default function AegisConversationalApp() {
 
           <button
             onClick={handleCreateNewChat}
-            className="w-full py-2 px-3 rounded-lg border border-zinc-700 bg-zinc-800 hover:bg-zinc-750 text-xs font-semibold flex items-center justify-between text-zinc-200 transition-colors duration-150"
+            className="w-full py-2 px-3 rounded-lg border border-white/10 glass-pill hover:bg-white/10 text-xs font-semibold flex items-center justify-between text-zinc-200 transition-colors duration-150"
           >
             <span className="flex items-center gap-2">
               <Plus className="w-3.5 h-3.5" />
@@ -832,7 +834,7 @@ export default function AegisConversationalApp() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search chats (Ctrl+K)"
-              className="w-full bg-zinc-900 border border-zinc-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-zinc-600 transition-colors duration-150"
+              className="w-full glass-pill border border-white/8 rounded-lg pl-8 pr-3 py-1.5 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-white/20 transition-colors duration-150"
             />
           </div>
         </div>
@@ -861,8 +863,8 @@ export default function AegisConversationalApp() {
                       }}
                       className={`group relative flex items-center justify-between px-2.5 py-2 rounded-lg cursor-pointer transition-colors duration-150 ${
                         activeChatId === chat.id
-                          ? "bg-zinc-800 text-zinc-100 font-medium"
-                          : "text-zinc-400 hover:bg-zinc-850 hover:text-zinc-200"
+                          ? "bg-white/10 text-zinc-100 font-medium border border-white/10 shadow-sm"
+                          : "text-zinc-400 hover:bg-white/5 hover:text-zinc-200"
                       }`}
                     >
                       <span className="truncate pr-12 text-xs">{chat.title}</span>
@@ -873,7 +875,7 @@ export default function AegisConversationalApp() {
                             setRenameTargetId(chat.id);
                             setRenameValue(chat.title);
                           }}
-                          className="p-1 rounded text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700"
+                          className="p-1 rounded text-zinc-400 hover:text-zinc-200 hover:bg-white/10"
                           title="Rename chat"
                         >
                           <Edit3 className="w-3 h-3" />
@@ -883,7 +885,7 @@ export default function AegisConversationalApp() {
                             e.stopPropagation();
                             setDeleteTargetId(chat.id);
                           }}
-                          className="p-1 rounded text-zinc-400 hover:text-red-400 hover:bg-zinc-700"
+                          className="p-1 rounded text-zinc-400 hover:text-red-400 hover:bg-white/10"
                           title="Delete chat"
                         >
                           <Trash2 className="w-3 h-3" />
@@ -909,8 +911,8 @@ export default function AegisConversationalApp() {
                       }}
                       className={`group relative flex items-center justify-between px-2.5 py-2 rounded-lg cursor-pointer transition-colors duration-150 ${
                         activeChatId === chat.id
-                          ? "bg-zinc-800 text-zinc-100 font-medium"
-                          : "text-zinc-400 hover:bg-zinc-850 hover:text-zinc-200"
+                          ? "bg-white/10 text-zinc-100 font-medium border border-white/10 shadow-sm"
+                          : "text-zinc-400 hover:bg-white/5 hover:text-zinc-200"
                       }`}
                     >
                       <span className="truncate pr-12 text-xs">{chat.title}</span>
@@ -921,7 +923,7 @@ export default function AegisConversationalApp() {
                             setRenameTargetId(chat.id);
                             setRenameValue(chat.title);
                           }}
-                          className="p-1 rounded text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700"
+                          className="p-1 rounded text-zinc-400 hover:text-zinc-200 hover:bg-white/10"
                           title="Rename chat"
                         >
                           <Edit3 className="w-3 h-3" />
@@ -931,7 +933,7 @@ export default function AegisConversationalApp() {
                             e.stopPropagation();
                             setDeleteTargetId(chat.id);
                           }}
-                          className="p-1 rounded text-zinc-400 hover:text-red-400 hover:bg-zinc-700"
+                          className="p-1 rounded text-zinc-400 hover:text-red-400 hover:bg-white/10"
                           title="Delete chat"
                         >
                           <Trash2 className="w-3 h-3" />
@@ -957,8 +959,8 @@ export default function AegisConversationalApp() {
                       }}
                       className={`group relative flex items-center justify-between px-2.5 py-2 rounded-lg cursor-pointer transition-colors duration-150 ${
                         activeChatId === chat.id
-                          ? "bg-zinc-800 text-zinc-100 font-medium"
-                          : "text-zinc-400 hover:bg-zinc-850 hover:text-zinc-200"
+                          ? "bg-white/10 text-zinc-100 font-medium border border-white/10 shadow-sm"
+                          : "text-zinc-400 hover:bg-white/5 hover:text-zinc-200"
                       }`}
                     >
                       <span className="truncate pr-12 text-xs">{chat.title}</span>
@@ -969,7 +971,7 @@ export default function AegisConversationalApp() {
                             setRenameTargetId(chat.id);
                             setRenameValue(chat.title);
                           }}
-                          className="p-1 rounded text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700"
+                          className="p-1 rounded text-zinc-400 hover:text-zinc-200 hover:bg-white/10"
                           title="Rename chat"
                         >
                           <Edit3 className="w-3 h-3" />
@@ -979,7 +981,7 @@ export default function AegisConversationalApp() {
                             e.stopPropagation();
                             setDeleteTargetId(chat.id);
                           }}
-                          className="p-1 rounded text-zinc-400 hover:text-red-400 hover:bg-zinc-700"
+                          className="p-1 rounded text-zinc-400 hover:text-red-400 hover:bg-white/10"
                           title="Delete chat"
                         >
                           <Trash2 className="w-3 h-3" />
@@ -994,10 +996,10 @@ export default function AegisConversationalApp() {
         </div>
 
         {/* Sidebar Footer: Clear All Chats */}
-        <div className="p-3 border-t border-zinc-800 shrink-0">
+        <div className="p-3 border-t border-white/8 shrink-0">
           <button
             onClick={() => setIsClearAllModalOpen(true)}
-            className="w-full py-2 px-3 rounded-lg border border-zinc-800 hover:border-zinc-700 bg-zinc-900/60 hover:bg-zinc-850 text-xs text-zinc-400 hover:text-zinc-200 flex items-center justify-center gap-1.5 transition-colors duration-150"
+            className="w-full py-2 px-3 rounded-lg border border-white/8 hover:border-white/15 glass-pill hover:bg-white/10 text-xs text-zinc-400 hover:text-zinc-200 flex items-center justify-center gap-1.5 transition-colors duration-150"
           >
             <Trash2 className="w-3.5 h-3.5" />
             <span>Clear all chats</span>
@@ -1008,14 +1010,14 @@ export default function AegisConversationalApp() {
       {/* Main Container */}
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         {/* 2. HEADER */}
-        <header className="h-14 border-b border-zinc-800 bg-[#212121] px-4 flex items-center justify-between shrink-0 z-30">
+        <header className="h-14 border-b border-white/8 glass-header px-4 flex items-center justify-between shrink-0 z-30">
           <div className="flex items-center gap-3">
             {/* Sidebar Toggle Button */}
             <button
               onClick={handleToggleSidebar}
               aria-expanded={isSidebarOpen}
               aria-label="Toggle sidebar"
-              className="p-1.5 rounded-lg border border-zinc-700 bg-zinc-800 hover:bg-zinc-750 text-zinc-300 transition-colors duration-150"
+              className="p-1.5 rounded-lg border border-white/10 glass-pill hover:bg-white/10 text-zinc-300 transition-colors duration-150"
               title="Toggle sidebar"
             >
               {isSidebarOpen ? (
@@ -1025,46 +1027,11 @@ export default function AegisConversationalApp() {
               )}
             </button>
 
-            {/* Model Selector / Dry run mode indicator */}
-            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-zinc-700 bg-zinc-800 text-xs font-medium text-zinc-300">
-              <Cpu className="w-3.5 h-3.5 text-zinc-400" />
-              {isLoadingModels ? (
-                <span className="text-zinc-500 text-xs">Checking models...</span>
-              ) : availableModels.length > 0 ? (
-                <select
-                  value={selectedModelId}
-                  onChange={(e) => handleSelectModel(e.target.value)}
-                  className="bg-transparent border-none text-xs font-semibold focus:outline-none cursor-pointer text-zinc-200"
-                >
-                  {availableModels.map((m) => (
-                    <option key={m.id} value={m.id} className="bg-zinc-900 text-zinc-100">
-                      {m.label}
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <span className="text-amber-400 text-xs font-semibold">Dry run mode</span>
-              )}
-            </div>
-
-            {/* Role Clearance Selector (fetches server token) */}
-            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-zinc-700 bg-zinc-800 text-xs font-medium text-zinc-300">
-              <Lock className="w-3 h-3 text-zinc-400" />
-              <select
-                value={selectedRole}
-                onChange={(e) => setSelectedRole(e.target.value as UserRole)}
-                className="bg-transparent border-none text-xs font-semibold focus:outline-none cursor-pointer text-zinc-200"
-              >
-                <option value="intern" className="bg-zinc-900 text-zinc-100">
-                  Role: Intern
-                </option>
-                <option value="developer" className="bg-zinc-900 text-zinc-100">
-                  Role: Developer
-                </option>
-                <option value="executive" className="bg-zinc-900 text-zinc-100">
-                  Role: Executive
-                </option>
-              </select>
+            {/* Wordmark and Gateway Shield status in header */}
+            <div className="flex items-center gap-2 font-semibold text-xs text-zinc-300">
+              <Shield className="w-4 h-4 text-emerald-400" />
+              <span>Aegis Guard</span>
+              <span className="text-[10px] font-mono text-zinc-500 border border-white/5 px-1.5 py-0.5 rounded">Security Gateway</span>
             </div>
           </div>
 
@@ -1076,14 +1043,14 @@ export default function AegisConversationalApp() {
               aria-label="Toggle Security Inspector"
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors duration-150 ${
                 isInspectorOpen
-                  ? "bg-zinc-700 border-zinc-600 text-zinc-100"
-                  : "bg-zinc-800 border-zinc-700 hover:bg-zinc-750 text-zinc-200"
+                  ? "bg-white/15 border-white/20 text-zinc-100 shadow-sm"
+                  : "glass-pill hover:bg-white/10 text-zinc-200 border-white/10"
               }`}
               title="Toggle Security Inspector"
             >
               <SlidersHorizontal className="w-3.5 h-3.5 text-zinc-400" />
               <span>Security Inspector</span>
-              <span className="px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold bg-zinc-700 text-zinc-200">
+              <span className="px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold bg-white/10 text-zinc-200">
                 {auditRecords.length}
               </span>
             </button>
@@ -1218,19 +1185,9 @@ export default function AegisConversationalApp() {
 
                       {/* Inline Masking Advisory Tag */}
                       {isMasked && (
-                        <div className="inline-flex items-center flex-wrap gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border text-amber-400 bg-amber-400/10 border-amber-400/20">
-                          <Shield className="w-3.5 h-3.5" />
+                        <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg text-xs font-medium border text-amber-400 bg-amber-400/10 border-amber-400/20 w-fit">
+                          <Shield className="w-3.5 h-3.5 shrink-0" />
                           <span>Sensitive entities sanitized before model dispatch</span>
-                          <button
-                            onClick={() => {
-                              if (msg.result) setLatestResult(msg.result);
-                              setInspectorTab("diff");
-                              setIsInspectorOpen(true);
-                            }}
-                            className="underline hover:text-amber-300 font-semibold ml-1 cursor-pointer"
-                          >
-                            [Inspect payload]
-                          </button>
                         </div>
                       )}
 
@@ -1308,10 +1265,10 @@ export default function AegisConversationalApp() {
                               setInspectorTab("diff");
                               setIsInspectorOpen(true);
                             }}
-                            className="inline-flex items-center gap-1 text-[11px] text-zinc-400 hover:text-zinc-200 transition-colors duration-150"
+                            className="inline-flex items-center gap-1.5 text-[11px] text-zinc-400 hover:text-zinc-200 transition-colors duration-150"
                           >
-                            <FileText className="w-3 h-3" />
-                            <span>View payload inspection</span>
+                            <FileText className="w-3.5 h-3.5" />
+                            <span>Inspect payload</span>
                           </button>
                         )}
                       </div>
@@ -1332,18 +1289,18 @@ export default function AegisConversationalApp() {
             </div>
           </main>
 
-          {/* 5. RIGHT-DOCKED SECURITY INSPECTOR DRAWER (No overlay, no blur) */}
+          {/* 5. RIGHT-DOCKED SECURITY INSPECTOR DRAWER */}
           {isInspectorOpen && (
-            <aside className="w-[400px] shrink-0 border-l border-zinc-800 bg-[#18181b] flex flex-col h-full z-20">
+            <aside className="w-[400px] shrink-0 border-l border-white/10 glass-sidebar flex flex-col h-full z-20">
               {/* Header */}
-              <div className="h-14 border-b border-zinc-800 px-4 flex items-center justify-between shrink-0">
+              <div className="h-14 border-b border-white/8 px-4 flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="w-4 h-4 text-emerald-500" />
                   <span className="font-semibold text-sm text-zinc-100">Security Inspector</span>
                 </div>
                 <button
                   onClick={() => setIsInspectorOpen(false)}
-                  className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors duration-150"
+                  className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-white/10 transition-colors duration-150"
                   aria-label="Close Security Inspector"
                 >
                   <X className="w-4 h-4" />
@@ -1426,6 +1383,19 @@ export default function AegisConversationalApp() {
                             {latestResult.tokenized_prompt || "(Zero data forwarded)"}
                           </div>
                         </div>
+
+                        {/* Section 3: Derived Format Facts */}
+                        {latestResult.derived_facts_block && (
+                          <div className="space-y-1.5">
+                            <div className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider flex items-center justify-between">
+                              <span>Derived format facts (System instructions)</span>
+                              <span className="text-emerald-400 text-[10px]">Internal Facts</span>
+                            </div>
+                            <div className="p-3 rounded-xl border border-zinc-800 bg-zinc-900 text-zinc-200 font-mono text-xs leading-relaxed whitespace-pre-wrap break-all">
+                              {latestResult.derived_facts_block}
+                            </div>
+                          </div>
+                        )}
 
                         {/* Detected Entities */}
                         {latestResult.detected_entities && latestResult.detected_entities.length > 0 && (
@@ -1618,7 +1588,7 @@ export default function AegisConversationalApp() {
         </div>
 
         {/* 4. FLOATING BOTTOM INPUT BAR */}
-        <div className="fixed bottom-0 left-0 right-0 p-4 border-t border-zinc-800 bg-[#212121] z-30">
+        <div className="fixed bottom-0 left-0 right-0 p-4 border-t border-white/8 glass-bottom-bar z-30">
           <div
             className={`max-w-3xl mx-auto space-y-2 transition-all duration-200 ${
               isSidebarOpen && !isMobile ? "lg:ml-[260px] xl:mx-auto" : ""
@@ -1626,7 +1596,7 @@ export default function AegisConversationalApp() {
           >
             {/* Compact Dry Run Notice (Dismissible) */}
             {isDryRunActive && !isDryRunDismissed && (
-              <div className="flex items-center justify-between px-3 py-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-300 text-xs">
+              <div className="flex items-center justify-between px-3 py-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-300 text-xs backdrop-blur-md">
                 <span>
                   No provider key found. Running in dry run mode: the gateway checks your prompt but does not call a model.
                 </span>
@@ -1642,34 +1612,15 @@ export default function AegisConversationalApp() {
 
             {/* Paste 8000 char warning */}
             {pasteWarning && (
-              <div className="px-3 py-1 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-300 text-xs">
+              <div className="px-3 py-1 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-300 text-xs backdrop-blur-md">
                 {pasteWarning}
               </div>
             )}
 
             {/* Main Input Box */}
-            <div className="rounded-xl border border-zinc-700 bg-[#2f2f2f] focus-within:border-zinc-500 p-2 flex flex-col gap-1.5 shadow-sm">
-              <form onSubmit={handleSendMessage} className="flex items-end gap-2 px-1">
-                {/* Image Attach Button */}
-                <button
-                  type="button"
-                  disabled={!selectedModelConfig?.supports_images}
-                  onClick={() => {
-                    if (selectedModelConfig?.supports_images) {
-                      setAttachedImage("simulated_document_buffer");
-                    }
-                  }}
-                  title={
-                    selectedModelConfig?.supports_images
-                      ? "Attach document for in-memory OCR redaction"
-                      : "Selected model does not support image attachments"
-                  }
-                  className="p-2 rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700 transition-colors duration-150 mb-0.5 disabled:opacity-30 disabled:cursor-not-allowed"
-                >
-                  <Paperclip className="w-4 h-4" />
-                </button>
-
-                {/* Auto-growing Textarea */}
+            <form onSubmit={handleSendMessage} className="rounded-xl glass-card focus-within:border-white/20 p-2.5 flex flex-col gap-2 shadow-xl transition-all duration-150">
+              {/* Auto-growing Textarea */}
+              <div className="px-1 pt-0.5">
                 <textarea
                   ref={textareaRef}
                   value={promptInput}
@@ -1678,30 +1629,115 @@ export default function AegisConversationalApp() {
                   onPaste={handlePaste}
                   rows={1}
                   placeholder="Message Aegis Guard"
-                  className="flex-1 bg-transparent border-none text-sm focus:outline-none placeholder-zinc-400 resize-none py-1.5 leading-normal max-h-48 text-zinc-100"
+                  className="w-full bg-transparent border-none text-sm focus:outline-none placeholder-zinc-400 resize-none leading-relaxed max-h-48 text-zinc-100"
                 />
+              </div>
 
-                {/* Send or Stop Button */}
-                {isSubmitting ? (
+              {/* Attached Image Indicator if present */}
+              {attachedImage && (
+                <div className="flex items-center justify-between px-2.5 py-1 rounded-lg bg-white/[0.06] border border-white/10 text-xs text-zinc-200 mx-1">
+                  <div className="flex items-center gap-1.5">
+                    <Paperclip className="w-3.5 h-3.5 text-emerald-400" />
+                    <span className="font-mono text-[11px]">simulated_document_buffer</span>
+                  </div>
                   <button
                     type="button"
-                    onClick={handleStopRequest}
-                    className="w-8 h-8 rounded-lg flex items-center justify-center bg-red-500 hover:bg-red-600 text-white transition-colors duration-150 mb-0.5"
-                    title="Stop request"
+                    onClick={() => setAttachedImage(null)}
+                    className="text-zinc-400 hover:text-zinc-100 p-0.5"
                   >
-                    <Square className="w-3.5 h-3.5 fill-current" />
+                    <X className="w-3.5 h-3.5" />
                   </button>
-                ) : (
+                </div>
+              )}
+
+              {/* Controls Toolbar: Attachment Icon + Model Tag + Role Tag + Send Button */}
+              <div className="flex items-center justify-between gap-2 px-0.5 pt-1 border-t border-white/[0.06]">
+                <div className="flex items-center flex-wrap gap-1.5">
+                  {/* Image Attach Button (Chat input icon) */}
                   <button
-                    type="submit"
-                    disabled={!promptInput.trim()}
-                    className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-150 disabled:opacity-30 disabled:cursor-not-allowed bg-zinc-100 text-zinc-900 hover:bg-zinc-200 mb-0.5"
-                    title="Send prompt"
+                    type="button"
+                    disabled={!selectedModelConfig?.supports_images}
+                    onClick={() => {
+                      if (selectedModelConfig?.supports_images) {
+                        setAttachedImage("simulated_document_buffer");
+                      }
+                    }}
+                    title={
+                      selectedModelConfig?.supports_images
+                        ? "Attach document for in-memory OCR redaction"
+                        : "Selected model does not support image attachments"
+                    }
+                    className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 glass-pill transition-colors duration-150 disabled:opacity-30 disabled:cursor-not-allowed"
                   >
-                    <Send className="w-3.5 h-3.5" />
+                    <Paperclip className="w-3.5 h-3.5" />
                   </button>
-                )}
-              </form>
+
+                  {/* Model Selector Tag near Chat Input Icon */}
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg glass-pill text-xs font-medium text-zinc-200">
+                    <Cpu className="w-3 h-3 text-zinc-400 shrink-0" />
+                    {isLoadingModels ? (
+                      <span className="text-zinc-500 text-xs">Checking models...</span>
+                    ) : availableModels.length > 0 ? (
+                      <select
+                        value={selectedModelId}
+                        onChange={(e) => handleSelectModel(e.target.value)}
+                        className="bg-transparent border-none text-xs font-semibold focus:outline-none cursor-pointer text-zinc-200"
+                      >
+                        {availableModels.map((m) => (
+                          <option key={m.id} value={m.id} className="bg-zinc-900 text-zinc-100">
+                            {m.label}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span className="text-amber-400 text-xs font-semibold">Dry run mode</span>
+                    )}
+                  </div>
+
+                  {/* Role Clearance Selector Tag near Chat Input Icon */}
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg glass-pill text-xs font-medium text-zinc-200">
+                    <Lock className="w-3 h-3 text-zinc-400 shrink-0" />
+                    <select
+                      value={selectedRole}
+                      onChange={(e) => setSelectedRole(e.target.value as UserRole)}
+                      className="bg-transparent border-none text-xs font-semibold focus:outline-none cursor-pointer text-zinc-200"
+                    >
+                      <option value="intern" className="bg-zinc-900 text-zinc-100">
+                        Role: Intern
+                      </option>
+                      <option value="developer" className="bg-zinc-900 text-zinc-100">
+                        Role: Developer
+                      </option>
+                      <option value="executive" className="bg-zinc-900 text-zinc-100">
+                        Role: Executive
+                      </option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Send or Stop Button on Right */}
+                <div className="shrink-0">
+                  {isSubmitting ? (
+                    <button
+                      type="button"
+                      onClick={handleStopRequest}
+                      className="w-7 h-7 rounded-lg flex items-center justify-center bg-red-500 hover:bg-red-600 text-white transition-colors duration-150"
+                      title="Stop request"
+                    >
+                      <Square className="w-3 h-3 fill-current" />
+                    </button>
+                  ) : (
+                    <button
+                      type="submit"
+                      disabled={!promptInput.trim()}
+                      className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors duration-150 disabled:opacity-30 disabled:cursor-not-allowed bg-zinc-100 text-zinc-900 hover:bg-zinc-200"
+                      title="Send prompt"
+                    >
+                      <Send className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+              </div>
 
               {/* Debounced 150ms Client Advisory Hint */}
               {advisoryHint && (
@@ -1715,7 +1751,7 @@ export default function AegisConversationalApp() {
                   {advisoryHint.text}
                 </div>
               )}
-            </div>
+            </form>
 
             {/* Footer Copy */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-1 text-[11px] text-zinc-500 px-1">
