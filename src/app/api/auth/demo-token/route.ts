@@ -1,12 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { signDemoToken, UserRole } from "@/lib/auth";
 
+const ALLOWED_ROLES = [
+  "intern",
+  "developer",
+  "executive",
+  "contractor",
+  "employee",
+  "finance_analyst",
+  "c_suite_executive",
+  "security_admin",
+];
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const role = (body.role || "intern") as UserRole;
 
-    if (!["intern", "developer", "executive"].includes(role)) {
+    if (!ALLOWED_ROLES.includes(role)) {
       return NextResponse.json({ error: "Invalid role specified." }, { status: 400 });
     }
 
