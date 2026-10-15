@@ -1,5 +1,6 @@
 import { findModelConfig } from "../../config/providers";
 import { AnthropicAdapter } from "./anthropic";
+import { GeminiAdapter } from "./gemini";
 import { MockProviderAdapter } from "./mock";
 import { OpenAiAdapter } from "./openai";
 import { ProviderAdapter } from "./types";
@@ -11,6 +12,8 @@ export function getProviderAdapter(modelId: string): { adapter: ProviderAdapter;
   }
 
   switch (config.provider) {
+    case "gemini":
+      return { adapter: new GeminiAdapter(), modelName: config.modelName };
     case "openai":
       return { adapter: new OpenAiAdapter(), modelName: config.modelName };
     case "anthropic":

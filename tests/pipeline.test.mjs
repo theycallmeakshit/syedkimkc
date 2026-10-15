@@ -131,3 +131,15 @@ test("8. Audit Hash Chaining: Verifies cryptographic SHA-256 chain and tampering
 
   globalAuditStore.clearLogs();
 });
+
+test("9. Model Provider Dispatch: Verifies local Aegis model and Gemini adapters are registered", async () => {
+  process.env.GEMINI_API_KEY = "test-mock-key";
+  const { getProviderAdapter } = await import("../src/lib/providers/index");
+  const localModel = getProviderAdapter("mock-echo-test");
+  assert.ok(localModel.adapter);
+  assert.equal(localModel.modelName, "aegis-local-engine");
+
+  const gemini = getProviderAdapter("gemini-3.5-flash");
+  assert.ok(gemini.adapter);
+  assert.equal(gemini.modelName, "gemini-3.5-flash");
+});
