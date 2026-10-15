@@ -24,9 +24,11 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   LogOut,
+  User,
 } from "lucide-react";
-import { UserAccount, UserRole } from "@/lib/auth";
-import { LoginModal } from "@/components/LoginModal";
+import { UserAccount } from "@/lib/auth";
+
+export type UserRole = "intern" | "developer" | "executive";
 
 export interface ModelOption {
   id: string;
@@ -160,7 +162,6 @@ export default function AegisConversationalApp() {
   const [selectedRole, setSelectedRole] = useState<UserRole>("intern");
   const [roleToken, setRoleToken] = useState<string>("");
   const [currentUser, setCurrentUser] = useState<UserAccount | null>(null);
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
 
   // Saved Chats (Masked content only)
   const [savedChats, setSavedChats] = useState<SavedChat[]>([]);
@@ -256,34 +257,9 @@ export default function AegisConversationalApp() {
     loadModels();
   }, []);
 
-  // 3. Restore persisted user session on mount
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem("aegis_user_session");
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (parsed.user) {
-          setCurrentUser(parsed.user);
-          if (parsed.user.pipelineRole) {
-            setSelectedRole(parsed.user.pipelineRole);
-          }
-          if (parsed.token) {
-            setRoleToken(parsed.token);
-          }
-        }
-      }
-    } catch {
-      // ignore
-    }
-  }, []);
-
-  // 4. Fetch server-signed demo token whenever role changes (if no token)
+  // 3. Fetch server-signed demo token whenever role changes
   useEffect(() => {
     async function obtainRoleToken() {
-      // If user is logged in and role matches, keep their token
-      if (currentUser && currentUser.pipelineRole === selectedRole && roleToken) {
-        return;
-      }
       try {
         const res = await fetch("/api/auth/demo-token", {
           method: "POST",
@@ -301,22 +277,29 @@ export default function AegisConversationalApp() {
     obtainRoleToken();
   }, [selectedRole]);
 
-  const handleLoginSuccess = (user: UserAccount, token: string) => {
-    setCurrentUser(user);
-    setSelectedRole(user.pipelineRole);
-    setRoleToken(token);
-    localStorage.setItem("aegis_user_session", JSON.stringify({ user, token }));
-    localStorage.setItem("aegis_role_token", token);
-    localStorage.setItem("aegis_user_role", user.pipelineRole);
-    setIsLoginModalOpen(false);
-  };
+  // 3b. Load active enterprise user session from localStorage on mount
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("aegis_user_session");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.user) {
+          setCurrentUser(parsed.user);
+          if (parsed.token) setRoleToken(parsed.token);
+          if (parsed.user.pipelineRole) setSelectedRole(parsed.user.pipelineRole);
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
 
   const handleLogout = () => {
-    setCurrentUser(null);
-    setSelectedRole("intern");
     localStorage.removeItem("aegis_user_session");
     localStorage.removeItem("aegis_role_token");
     localStorage.removeItem("aegis_user_role");
+    setCurrentUser(null);
+    setSelectedRole("intern");
   };
 
   // 4. Load chats from sessionStorage on mount
@@ -819,9 +802,15 @@ export default function AegisConversationalApp() {
 
   return (
     <div className="min-h-screen flex font-sans bg-dot-matrix text-zinc-100 overflow-hidden relative">
-      {/* Ambient faint dark teal/green glow behind sidebar so the blur is optically visible */}
-      <div className="fixed top-12 left-6 w-72 h-72 bg-emerald-950/20 rounded-3xl blur-3xl pointer-events-none -z-10" />
-      <div className="fixed top-80 left-4 w-64 h-64 bg-teal-950/25 rounded-3xl blur-3xl pointer-events-none -z-10" />
+      {/* Ambient Faint Dark Teal / Green Radial Glow Behind Sidebar */}
+      <div
+        className="fixed -top-24 -left-24 w-96 h-[500px] rounded-3xl bg-emerald-950/20 blur-3xl pointer-events-none z-0"
+        aria-hidden="true"
+      />
+      <div
+        className="fixed top-80 -left-20 w-80 h-96 rounded-3xl bg-teal-950/25 blur-3xl pointer-events-none z-0"
+        aria-hidden="true"
+      />
 
       {/* Mobile Sidebar Backdrop */}
       {isMobile && isSidebarOpen && (
@@ -841,153 +830,150 @@ export default function AegisConversationalApp() {
               }`
             : `${
                 isSidebarOpen ? "w-[260px]" : "w-14"
-              } shrink-0 glass-sidebar transition-all duration-200 motion-reduce:transition-none overflow-hidden flex flex-col h-screen`
-        } flex flex-col`}
+              } shrink-0 glass-sidebar transition-all duration-200 motion-reduce:transition-none overflow-hidden flex flex-col h-screen z-30`
+        } flex flex-col relative`}
       >
-        {/* COLLAPSED RAIL VIEW (56px) on Desktop */}
-        {!isSidebarOpen && !isMobile && (
-          <div className="flex flex-col items-center py-3 gap-3 h-full">
+        {/* COLLAPSED ICON RAIL VIEW (When sidebar is collapsed on desktop) */}
+        {!isSidebarOpen && !isMobile ? (
+          <div className="flex flex-col items-center py-3 gap-2 shrink-0 h-full">
+            {/* Expand Toggle */}
             <button
               onClick={handleToggleSidebar}
-              className="p-2 rounded-lg text-zinc-400 hover:text-zinc-100 glass-sidebar-surface transition-colors duration-150"
               title="Expand sidebar"
               aria-label="Expand sidebar"
+              className="p-2 rounded-lg text-zinc-400 hover:text-zinc-200 glass-sidebar-surface"
             >
               <PanelLeftOpen className="w-4 h-4" />
             </button>
 
+            {/* New chat icon button */}
             <button
               onClick={handleCreateNewChat}
-              className="p-2 rounded-lg text-zinc-300 hover:text-white glass-sidebar-surface transition-colors duration-150"
               title="New chat (Alt+N)"
               aria-label="New chat"
+              className="p-2 rounded-lg text-zinc-400 hover:text-zinc-200 glass-sidebar-surface"
             >
               <Plus className="w-4 h-4" />
             </button>
 
+            {/* Search icon button */}
             <button
               onClick={() => {
                 setIsSidebarOpen(true);
-                setTimeout(() => searchInputRef.current?.focus(), 150);
+                setTimeout(() => searchInputRef.current?.focus(), 50);
               }}
-              className="p-2 rounded-lg text-zinc-400 hover:text-zinc-200 glass-sidebar-surface transition-colors duration-150"
               title="Search chats (Ctrl+K)"
               aria-label="Search chats"
+              className="p-2 rounded-lg text-zinc-400 hover:text-zinc-200 glass-sidebar-surface"
             >
               <Search className="w-4 h-4" />
             </button>
 
-            <div className="w-6 h-px bg-white/10 my-1" />
+            <div className="w-6 h-px bg-white/10 my-0.5" />
 
-            {/* a) Collapsed Model Icon Button with Tooltip */}
+            {/* a) Icon-only Model selector with tooltip */}
             <div className="relative group">
               <button
-                onClick={() => setIsSidebarOpen(true)}
-                className="p-2 rounded-lg text-zinc-400 hover:text-emerald-400 glass-sidebar-surface transition-colors duration-150"
-                title={`Model: ${selectedModelConfig?.label || selectedModelId}`}
-                aria-label={`Model: ${selectedModelConfig?.label || selectedModelId}`}
+                type="button"
+                title={`Model: ${selectedModelConfig?.label || "Aegis Gateway"}`}
+                className="p-2 rounded-lg text-zinc-400 hover:text-zinc-200 glass-sidebar-surface flex items-center justify-center"
               >
                 <Cpu className="w-4 h-4" />
               </button>
-              <span className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-2 py-1 rounded-lg bg-zinc-900 border border-white/10 text-[10px] font-mono text-zinc-200 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-50">
-                {selectedModelConfig?.label || selectedModelId}
-              </span>
+              <select
+                value={selectedModelId}
+                onChange={(e) => handleSelectModel(e.target.value)}
+                title={`Model: ${selectedModelConfig?.label || "Aegis Gateway"}`}
+                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                aria-label="Select model"
+              >
+                {availableModels.map((m) => (
+                  <option key={m.id} value={m.id} className="bg-zinc-900 text-zinc-100">
+                    {m.label}
+                  </option>
+                ))}
+              </select>
             </div>
 
-            {/* b) Collapsed Role Icon Button with Tooltip */}
+            {/* b) Icon-only Role selector with tooltip */}
             <div className="relative group">
               <button
-                onClick={() => setIsSidebarOpen(true)}
-                className="p-2 rounded-lg text-zinc-400 hover:text-emerald-400 glass-sidebar-surface transition-colors duration-150"
-                title={`Role: ${selectedRole}`}
-                aria-label={`Role: ${selectedRole}`}
+                type="button"
+                title={`Role: ${selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)}`}
+                className="p-2 rounded-lg text-zinc-400 hover:text-zinc-200 glass-sidebar-surface flex items-center justify-center"
               >
                 <Lock className="w-4 h-4" />
               </button>
-              <span className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-2 py-1 rounded-lg bg-zinc-900 border border-white/10 text-[10px] font-mono text-zinc-200 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-50">
-                Role: {selectedRole}
-              </span>
-            </div>
-
-            {/* c) Collapsed Security Inspector Icon Button with Badge & Tooltip */}
-            <div className="relative group">
-              <button
-                onClick={() => setIsInspectorOpen((prev) => !prev)}
-                className={`p-2 rounded-lg relative transition-colors duration-150 ${
-                  isInspectorOpen
-                    ? "glass-sidebar-surface-active text-emerald-400"
-                    : "glass-sidebar-surface text-zinc-400 hover:text-zinc-200"
-                }`}
-                title="Security Inspector"
-                aria-label="Security Inspector"
+              <select
+                value={selectedRole}
+                onChange={(e) => setSelectedRole(e.target.value as UserRole)}
+                title={`Role: ${selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)}`}
+                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                aria-label="Select clearance role"
               >
-                <SlidersHorizontal className="w-4 h-4" />
-                {auditRecords.length > 0 && (
-                  <span className="absolute -top-1 -right-1 px-1 rounded-sm text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                    {auditRecords.length}
-                  </span>
-                )}
-              </button>
-              <span className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-2 py-1 rounded-lg bg-zinc-900 border border-white/10 text-[10px] font-mono text-zinc-200 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-50">
-                Security Inspector ({auditRecords.length})
-              </span>
+                <option value="intern" className="bg-zinc-900 text-zinc-100">Role: Intern</option>
+                <option value="developer" className="bg-zinc-900 text-zinc-100">Role: Developer</option>
+                <option value="executive" className="bg-zinc-900 text-zinc-100">Role: Executive</option>
+              </select>
             </div>
 
-            {/* Spacer */}
-            <div className="flex-1" />
-
-            {/* User Clearance Avatar in Rail if logged in */}
-            {currentUser && (
-              <div className="relative group">
-                <button
-                  onClick={() => setIsLoginModalOpen(true)}
-                  className="p-1.5 rounded-lg glass-sidebar-surface hover:border-emerald-500/30 transition-colors duration-150"
-                  title={`${currentUser.name} (L${currentUser.classification_level})`}
-                  aria-label="View user clearance"
-                >
-                  <span className="text-sm">{currentUser.avatar}</span>
-                </button>
-                <span className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-2 py-1 rounded-lg bg-zinc-900 border border-white/10 text-[10px] text-zinc-200 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-50">
-                  {currentUser.name} &bull; L{currentUser.classification_level}
+            {/* c) Icon-only Security Inspector with tooltip & badge */}
+            <button
+              onClick={() => setIsInspectorOpen((prev) => !prev)}
+              title={`Security Inspector (${auditRecords.length} audit records)`}
+              className={`relative p-2 rounded-lg text-zinc-400 hover:text-zinc-200 glass-sidebar-surface flex items-center justify-center ${
+                isInspectorOpen ? "glass-sidebar-surface-active text-emerald-400" : ""
+              }`}
+              aria-label="Toggle Security Inspector"
+            >
+              <SlidersHorizontal className="w-4 h-4" />
+              {auditRecords.length > 0 && (
+                <span className="absolute -top-1 -right-1 px-1 min-w-[14px] text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded">
+                  {auditRecords.length}
                 </span>
-              </div>
-            )}
-          </div>
-        )}
+              )}
+            </button>
 
-        {/* EXPANDED SIDEBAR VIEW (260px) */}
-        {(isSidebarOpen || isMobile) && (
-          <div className="flex flex-col h-full w-[260px] overflow-hidden">
-            {/* Top Wordmark & New Chat Button */}
-            <div className="p-3 border-b border-white/8 flex flex-col gap-2 shrink-0">
-              <div className="flex items-center justify-between px-1">
-                <div className="flex items-center gap-2 font-semibold text-sm text-zinc-100">
-                  <Shield className="w-4 h-4 text-emerald-500" />
-                  <span>Aegis Guard</span>
-                </div>
-                {isMobile ? (
-                  <button
-                    onClick={() => setIsSidebarOpen(false)}
-                    className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-white/10 transition-colors duration-150"
-                    aria-label="Close sidebar"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+            {/* d) Icon-only User Profile / Login Link with tooltip */}
+            <div className="relative group pt-1">
+              <Link
+                href="/login"
+                className="p-2 rounded-lg text-zinc-400 hover:text-emerald-400 hover:border-emerald-500/30 glass-sidebar-surface flex items-center justify-center transition-colors"
+                title={currentUser ? `${currentUser.name} (L${currentUser.classification_level})` : "Login Portal"}
+                aria-label="Login Portal"
+              >
+                {currentUser ? (
+                  <span className="text-sm">{currentUser.avatar}</span>
                 ) : (
-                  <button
-                    onClick={handleToggleSidebar}
-                    className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-white/10 transition-colors duration-150"
-                    aria-label="Collapse sidebar"
-                    title="Collapse sidebar"
-                  >
-                    <PanelLeftClose className="w-4 h-4" />
-                  </button>
+                  <User className="w-4 h-4" />
                 )}
+              </Link>
+            </div>
+          </div>
+        ) : (
+          /* EXPANDED SIDEBAR VIEW */
+          <>
+            {/* Top Wordmark & Collapse Button */}
+            <div className="p-3 border-b border-white/8 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-2 font-semibold text-sm text-zinc-100">
+                <Shield className="w-4 h-4 text-emerald-500" />
+                <span>Aegis Guard</span>
               </div>
+              <button
+                onClick={handleToggleSidebar}
+                className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 glass-sidebar-surface transition-colors duration-150"
+                aria-label="Collapse sidebar"
+                title="Collapse sidebar"
+              >
+                {isMobile ? <X className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
+              </button>
+            </div>
 
+            {/* New Chat Button */}
+            <div className="px-3 pt-2 shrink-0">
               <button
                 onClick={handleCreateNewChat}
-                className="w-full py-2 px-3 rounded-lg glass-sidebar-surface text-xs font-semibold flex items-center justify-between text-zinc-200 transition-colors duration-150"
+                className="w-full py-2 px-3 rounded-lg border border-white/10 glass-sidebar-surface hover:bg-white/10 text-xs font-semibold flex items-center justify-between text-zinc-200 transition-colors duration-150"
               >
                 <span className="flex items-center gap-2">
                   <Plus className="w-3.5 h-3.5" />
@@ -998,7 +984,7 @@ export default function AegisConversationalApp() {
             </div>
 
             {/* Filter Search Input */}
-            <div className="px-3 pt-3 pb-2 shrink-0">
+            <div className="px-3 pt-2 pb-1 shrink-0">
               <div className="relative">
                 <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-2.5 top-2.5 pointer-events-none" />
                 <input
@@ -1007,13 +993,13 @@ export default function AegisConversationalApp() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search chats (Ctrl+K)"
-                  className="w-full glass-sidebar-surface rounded-lg pl-8 pr-3 py-1.5 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-white/20 transition-colors duration-150"
+                  className="w-full glass-sidebar-surface border border-white/8 rounded-lg pl-8 pr-3 py-1.5 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-white/20 transition-colors duration-150"
                 />
               </div>
             </div>
 
-            {/* 2. Top Bar Controls Group: Model, Role, Inspector (Stacked under Search) */}
-            <div className="px-3 pb-2 space-y-1.5 shrink-0 z-20">
+            {/* Compact Stacked Controls Directly Under Search Bar */}
+            <div className="px-3 pt-1 pb-2 space-y-1.5 shrink-0 z-20">
               {/* a) Model selector (full width dropdown) */}
               <div className="relative w-full">
                 <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg glass-sidebar-surface text-xs text-zinc-200">
@@ -1084,257 +1070,266 @@ export default function AegisConversationalApp() {
               </button>
             </div>
 
-            {/* Chat List Grouped by Date */}
-            <div className="flex-1 overflow-y-auto px-2 py-2 space-y-4 text-xs">
-              {savedChats.length === 0 ||
-              (groupedChats.today.length === 0 &&
-                groupedChats.yesterday.length === 0 &&
-                groupedChats.previous7Days.length === 0) ? (
-                <div className="py-8 text-center text-zinc-500 text-xs">No chats yet.</div>
-              ) : (
-                <>
-                  {/* Today */}
-                  {groupedChats.today.length > 0 && (
-                    <div className="space-y-1">
-                      <div className="px-2 text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">
-                        Today
-                      </div>
-                      {groupedChats.today.map((chat) => (
-                        <div
-                          key={chat.id}
-                          onClick={() => {
-                            setActiveChatId(chat.id);
-                            if (isMobile) setIsSidebarOpen(false);
-                          }}
-                          className={`group relative flex items-center justify-between px-2.5 py-2 rounded-lg cursor-pointer transition-colors duration-150 ${
-                            activeChatId === chat.id
-                              ? "glass-sidebar-surface-active text-zinc-100 font-medium"
-                              : "glass-sidebar-surface text-zinc-400 hover:text-zinc-200"
-                          }`}
-                        >
-                          <span className="truncate pr-12 text-xs">{chat.title}</span>
-                          <div className="absolute right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setRenameTargetId(chat.id);
-                                setRenameValue(chat.title);
-                              }}
-                              className="p-1 rounded text-zinc-400 hover:text-zinc-200 hover:bg-white/10"
-                              title="Rename chat"
-                            >
-                              <Edit3 className="w-3 h-3" />
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setDeleteTargetId(chat.id);
-                              }}
-                              className="p-1 rounded text-zinc-400 hover:text-red-400 hover:bg-white/10"
-                              title="Delete chat"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Yesterday */}
-                  {groupedChats.yesterday.length > 0 && (
-                    <div className="space-y-1">
-                      <div className="px-2 text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">
-                        Yesterday
-                      </div>
-                      {groupedChats.yesterday.map((chat) => (
-                        <div
-                          key={chat.id}
-                          onClick={() => {
-                            setActiveChatId(chat.id);
-                            if (isMobile) setIsSidebarOpen(false);
-                          }}
-                          className={`group relative flex items-center justify-between px-2.5 py-2 rounded-lg cursor-pointer transition-colors duration-150 ${
-                            activeChatId === chat.id
-                              ? "glass-sidebar-surface-active text-zinc-100 font-medium"
-                              : "glass-sidebar-surface text-zinc-400 hover:text-zinc-200"
-                          }`}
-                        >
-                          <span className="truncate pr-12 text-xs">{chat.title}</span>
-                          <div className="absolute right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setRenameTargetId(chat.id);
-                                setRenameValue(chat.title);
-                              }}
-                              className="p-1 rounded text-zinc-400 hover:text-zinc-200 hover:bg-white/10"
-                              title="Rename chat"
-                            >
-                              <Edit3 className="w-3 h-3" />
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setDeleteTargetId(chat.id);
-                              }}
-                              className="p-1 rounded text-zinc-400 hover:text-red-400 hover:bg-white/10"
-                              title="Delete chat"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Previous 7 days */}
-                  {groupedChats.previous7Days.length > 0 && (
-                    <div className="space-y-1">
-                      <div className="px-2 text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">
-                        Previous 7 days
-                      </div>
-                      {groupedChats.previous7Days.map((chat) => (
-                        <div
-                          key={chat.id}
-                          onClick={() => {
-                            setActiveChatId(chat.id);
-                            if (isMobile) setIsSidebarOpen(false);
-                          }}
-                          className={`group relative flex items-center justify-between px-2.5 py-2 rounded-lg cursor-pointer transition-colors duration-150 ${
-                            activeChatId === chat.id
-                              ? "glass-sidebar-surface-active text-zinc-100 font-medium"
-                              : "glass-sidebar-surface text-zinc-400 hover:text-zinc-200"
-                          }`}
-                        >
-                          <span className="truncate pr-12 text-xs">{chat.title}</span>
-                          <div className="absolute right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setRenameTargetId(chat.id);
-                                setRenameValue(chat.title);
-                              }}
-                              className="p-1 rounded text-zinc-400 hover:text-zinc-200 hover:bg-white/10"
-                              title="Rename chat"
-                            >
-                              <Edit3 className="w-3 h-3" />
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setDeleteTargetId(chat.id);
-                              }}
-                              className="p-1 rounded text-zinc-400 hover:text-red-400 hover:bg-white/10"
-                              title="Delete chat"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-
-            {/* Active user status in sidebar */}
-            {currentUser ? (
-              <div className="px-3 pt-2 shrink-0">
-                <div
-                  onClick={() => setIsLoginModalOpen(true)}
-                  className="p-2 rounded-lg border border-white/8 glass-sidebar-surface cursor-pointer flex items-center justify-between transition-colors group"
-                  title="Click to view full clearance profile & permissions"
-                >
-                  <div className="flex items-center gap-2 overflow-hidden">
-                    <span className="text-base">{currentUser.avatar}</span>
-                    <div className="overflow-hidden">
-                      <p className="text-xs font-bold text-zinc-200 truncate group-hover:text-emerald-400 transition-colors">
-                        {currentUser.name}
-                      </p>
-                      <p className="text-[10px] text-zinc-400 truncate">
-                        L{currentUser.classification_level} &bull; {currentUser.title}
-                      </p>
-                    </div>
+        {/* Chat List Grouped by Date */}
+        <div className="flex-1 overflow-y-auto px-2 py-2 space-y-4 text-xs">
+          {savedChats.length === 0 ||
+          (groupedChats.today.length === 0 &&
+            groupedChats.yesterday.length === 0 &&
+            groupedChats.previous7Days.length === 0) ? (
+            <div className="py-8 text-center text-zinc-500 text-xs">No chats yet.</div>
+          ) : (
+            <>
+              {/* Today */}
+              {groupedChats.today.length > 0 && (
+                <div className="space-y-1">
+                  <div className="px-2 text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">
+                    Today
                   </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleLogout();
-                    }}
-                    className="p-1 rounded text-zinc-400 hover:text-rose-400 hover:bg-white/10"
-                    title="Sign Out"
-                  >
-                    <LogOut className="w-3 h-3" />
-                  </button>
+                  {groupedChats.today.map((chat) => (
+                    <div
+                      key={chat.id}
+                      onClick={() => {
+                        setActiveChatId(chat.id);
+                        if (isMobile) setIsSidebarOpen(false);
+                      }}
+                      className={`group relative flex items-center justify-between px-2.5 py-2 rounded-lg cursor-pointer transition-colors duration-150 ${
+                        activeChatId === chat.id
+                          ? "bg-white/10 text-zinc-100 font-medium border border-white/10 shadow-sm"
+                          : "text-zinc-400 hover:bg-white/5 hover:text-zinc-200"
+                      }`}
+                    >
+                      <span className="truncate pr-12 text-xs">{chat.title}</span>
+                      <div className="absolute right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setRenameTargetId(chat.id);
+                            setRenameValue(chat.title);
+                          }}
+                          className="p-1 rounded text-zinc-400 hover:text-zinc-200 hover:bg-white/10"
+                          title="Rename chat"
+                        >
+                          <Edit3 className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeleteTargetId(chat.id);
+                          }}
+                          className="p-1 rounded text-zinc-400 hover:text-red-400 hover:bg-white/10"
+                          title="Delete chat"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
-            ) : (
-              <div className="px-3 pt-2 shrink-0">
-                <button
-                  onClick={() => setIsLoginModalOpen(true)}
-                  className="w-full py-2 px-3 rounded-lg border border-emerald-500/20 bg-emerald-500/10 hover:bg-emerald-500/20 text-xs font-semibold text-emerald-300 flex items-center justify-center gap-1.5 transition-colors"
-                >
-                  <Lock className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>Sign In / Select User</span>
-                </button>
-              </div>
-            )}
+              )}
 
-            {/* Sidebar Footer: Clear All Chats */}
-            <div className="p-3 border-t border-white/8 shrink-0">
+              {/* Yesterday */}
+              {groupedChats.yesterday.length > 0 && (
+                <div className="space-y-1">
+                  <div className="px-2 text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">
+                    Yesterday
+                  </div>
+                  {groupedChats.yesterday.map((chat) => (
+                    <div
+                      key={chat.id}
+                      onClick={() => {
+                        setActiveChatId(chat.id);
+                        if (isMobile) setIsSidebarOpen(false);
+                      }}
+                      className={`group relative flex items-center justify-between px-2.5 py-2 rounded-lg cursor-pointer transition-colors duration-150 ${
+                        activeChatId === chat.id
+                          ? "bg-white/10 text-zinc-100 font-medium border border-white/10 shadow-sm"
+                          : "text-zinc-400 hover:bg-white/5 hover:text-zinc-200"
+                      }`}
+                    >
+                      <span className="truncate pr-12 text-xs">{chat.title}</span>
+                      <div className="absolute right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setRenameTargetId(chat.id);
+                            setRenameValue(chat.title);
+                          }}
+                          className="p-1 rounded text-zinc-400 hover:text-zinc-200 hover:bg-white/10"
+                          title="Rename chat"
+                        >
+                          <Edit3 className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeleteTargetId(chat.id);
+                          }}
+                          className="p-1 rounded text-zinc-400 hover:text-red-400 hover:bg-white/10"
+                          title="Delete chat"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Previous 7 days */}
+              {groupedChats.previous7Days.length > 0 && (
+                <div className="space-y-1">
+                  <div className="px-2 text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">
+                    Previous 7 days
+                  </div>
+                  {groupedChats.previous7Days.map((chat) => (
+                    <div
+                      key={chat.id}
+                      onClick={() => {
+                        setActiveChatId(chat.id);
+                        if (isMobile) setIsSidebarOpen(false);
+                      }}
+                      className={`group relative flex items-center justify-between px-2.5 py-2 rounded-lg cursor-pointer transition-colors duration-150 ${
+                        activeChatId === chat.id
+                          ? "bg-white/10 text-zinc-100 font-medium border border-white/10 shadow-sm"
+                          : "text-zinc-400 hover:bg-white/5 hover:text-zinc-200"
+                      }`}
+                    >
+                      <span className="truncate pr-12 text-xs">{chat.title}</span>
+                      <div className="absolute right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setRenameTargetId(chat.id);
+                            setRenameValue(chat.title);
+                          }}
+                          className="p-1 rounded text-zinc-400 hover:text-zinc-200 hover:bg-white/10"
+                          title="Rename chat"
+                        >
+                          <Edit3 className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeleteTargetId(chat.id);
+                          }}
+                          className="p-1 rounded text-zinc-400 hover:text-red-400 hover:bg-white/10"
+                          title="Delete chat"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Active user status / login link in sidebar */}
+        {currentUser ? (
+          <div className="px-3 pt-2 shrink-0">
+            <div
+              className="p-2 rounded-lg border border-white/8 glass-sidebar-surface flex items-center justify-between"
+              title="Active enterprise clearance"
+            >
+              <Link href="/login" className="flex items-center gap-2 overflow-hidden flex-1 group">
+                <span className="text-base">{currentUser.avatar}</span>
+                <div className="overflow-hidden">
+                  <p className="text-xs font-bold text-zinc-200 truncate group-hover:text-emerald-400 transition-colors">
+                    {currentUser.name}
+                  </p>
+                  <p className="text-[10px] text-zinc-400 truncate">
+                    L{currentUser.classification_level} &bull; {currentUser.title}
+                  </p>
+                </div>
+              </Link>
               <button
-                onClick={() => setIsClearAllModalOpen(true)}
-                className="w-full py-2 px-3 rounded-lg glass-sidebar-surface text-xs text-zinc-400 hover:text-zinc-200 flex items-center justify-center gap-1.5 transition-colors duration-150"
+                onClick={handleLogout}
+                className="p-1 rounded text-zinc-400 hover:text-rose-400 hover:bg-white/10"
+                title="Sign Out"
               >
-                <Trash2 className="w-3.5 h-3.5" />
-                <span>Clear all chats</span>
+                <LogOut className="w-3 h-3" />
               </button>
             </div>
           </div>
+        ) : (
+          <div className="px-3 pt-2 shrink-0">
+            <Link
+              href="/login"
+              className="w-full py-2 px-3 rounded-lg border border-emerald-500/20 bg-emerald-500/10 hover:bg-emerald-500/20 text-xs font-semibold text-emerald-300 flex items-center justify-center gap-1.5 transition-colors"
+            >
+              <Lock className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Enterprise Sign In</span>
+            </Link>
+          </div>
+        )}
+
+        {/* Sidebar Footer: Clear All Chats */}
+        <div className="p-3 border-t border-white/8 shrink-0">
+          <button
+            onClick={() => setIsClearAllModalOpen(true)}
+            className="w-full py-2 px-3 rounded-lg border border-white/8 hover:border-white/15 glass-sidebar-surface hover:bg-white/10 text-xs text-zinc-400 hover:text-zinc-200 flex items-center justify-center gap-1.5 transition-colors duration-150"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>Clear all chats</span>
+          </button>
+        </div>
+          </>
         )}
       </aside>
 
       {/* Main Container */}
-      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-        {/* Minimal Header: Only shown when sidebar is closed or on mobile to maximize room */}
-        {(!isSidebarOpen || isMobile) && (
-          <header className="h-12 border-b border-white/8 glass-header px-4 flex items-center justify-between shrink-0 z-30">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={handleToggleSidebar}
-                aria-expanded={isSidebarOpen}
-                aria-label="Toggle sidebar"
-                className="p-1.5 rounded-lg border border-white/10 glass-sidebar-surface hover:text-zinc-100 text-zinc-300 transition-colors duration-150"
-                title="Toggle sidebar"
-              >
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden relative z-10">
+        {/* Top Header Bar: Just use logo at top right */}
+        <header className="h-12 border-b border-white/8 glass-header px-4 flex items-center justify-between shrink-0 z-20">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleToggleSidebar}
+              aria-label={isSidebarOpen ? "Collapse sidebar" : "Open sidebar"}
+              title={isSidebarOpen ? "Collapse sidebar" : "Open sidebar"}
+              className="p-1.5 rounded-lg border border-white/10 glass-sidebar-surface hover:bg-white/10 text-zinc-300 transition-colors duration-150"
+            >
+              {isSidebarOpen ? (
+                <PanelLeftClose className="w-4 h-4" />
+              ) : (
                 <PanelLeftOpen className="w-4 h-4" />
-              </button>
+              )}
+            </button>
+
+            {/* Wordmark when sidebar is closed or on mobile */}
+            {(!isSidebarOpen || isMobile) && (
               <div className="flex items-center gap-2 font-semibold text-xs text-zinc-300">
                 <Shield className="w-4 h-4 text-emerald-400" />
                 <span>Aegis Guard</span>
                 <span className="text-[10px] font-mono text-zinc-500 border border-white/5 px-1.5 py-0.5 rounded">Security Gateway</span>
               </div>
-            </div>
-
-            {currentUser && (
-              <button
-                onClick={() => setIsLoginModalOpen(true)}
-                aria-label="View user clearance"
-                className="flex items-center gap-2 px-2.5 py-1 rounded-lg glass-sidebar-surface text-xs transition-colors"
-                title="View user profile & RBAC clearance"
-              >
-                <span className="text-xs">{currentUser.avatar}</span>
-                <span className="text-zinc-200 font-semibold hidden sm:inline text-xs truncate max-w-[120px]">{currentUser.name}</span>
-                <span className="text-[10px] text-emerald-400 font-mono font-semibold">
-                  L{currentUser.classification_level}
-                </span>
-              </button>
             )}
-          </header>
-        )}
+          </div>
+
+          {/* Top Right Bar: Just use logo (links to login page) */}
+          <div className="flex items-center gap-2">
+            <Link
+              href="/login"
+              aria-label="Enterprise Login Portal"
+              title={
+                currentUser
+                  ? `${currentUser.name} (L${currentUser.classification_level} ${currentUser.clearance}) - Login Portal`
+                  : "Sign In / Enterprise Login Portal"
+              }
+              className="flex items-center justify-center w-8 h-8 rounded-lg border border-white/10 glass-sidebar-surface text-zinc-300 hover:text-emerald-400 hover:border-emerald-500/30 transition-colors duration-150 relative group"
+            >
+              {currentUser ? (
+                <span className="text-sm">{currentUser.avatar}</span>
+              ) : (
+                <Shield className="w-4 h-4 text-emerald-400" />
+              )}
+              {currentUser && (
+                <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-sm bg-emerald-400 border border-zinc-950"></span>
+              )}
+            </Link>
+          </div>
+        </header>
 
         {/* Workspace Body: Chat Stream + Docked Inspector */}
         <div className="flex-1 flex overflow-hidden">
@@ -1946,7 +1941,7 @@ export default function AegisConversationalApp() {
                         ? "Attach document for in-memory OCR redaction"
                         : "Selected model does not support image attachments"
                     }
-                    className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 glass-sidebar-surface transition-colors duration-150 disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 glass-pill transition-colors duration-150 disabled:opacity-30 disabled:cursor-not-allowed"
                   >
                     <Paperclip className="w-3.5 h-3.5" />
                   </button>
@@ -2110,15 +2105,6 @@ export default function AegisConversationalApp() {
           </div>
         </div>
       )}
-
-      {/* Enterprise RBAC Login & Profile Modal */}
-      <LoginModal
-        isOpen={isLoginModalOpen}
-        onClose={() => setIsLoginModalOpen(false)}
-        currentUser={currentUser}
-        onLoginSuccess={handleLoginSuccess}
-        onLogout={handleLogout}
-      />
     </div>
   );
 }
