@@ -29,6 +29,17 @@ export interface GatewayPipelineOptions {
   clientIp?: string;
 }
 
+import { findModelConfig } from "../../config/providers";
+
+export interface StepTimings {
+  scan_ms: number;
+  policy_ms: number;
+  rbac_ms: number;
+  model_ms?: number;
+  egress_ms: number;
+  is_dry_run?: boolean;
+}
+
 export interface GatewayPipelineResponse {
   isBlocked: boolean;
   status: number;
@@ -46,6 +57,7 @@ export interface GatewayPipelineResponse {
     detected_entities: PipelineEntityItem[];
     rag_chunks_included?: string[];
     audit_entry?: AuditLogEntry;
+    step_timings?: StepTimings;
   };
 }
 
@@ -264,7 +276,10 @@ export async function runGatewayPipeline(
   }
 
   // 2. Inbound Scan & Surrogate Replacement
+  const scanStart = performance.now();
   const inboundScan = scanAndTokenizeInbound(options.prompt);
+  const scan_ms = Math.max(1, Math.round((performance.now() - scanStart) * 10) / 10);
+
   const categories: ThreatCategory[] = [];
 
   if (inboundScan.hasSecrets) {
@@ -274,23 +289,23 @@ export async function runGatewayPipeline(
     categories.push("PII_SENSITIVE");
   }
 
-  // 3. Injection Scan
+  // 3. Injection Scan & 4. Policy Engine Check
+  const policyStart = performance.now();
   const injectionResult = detectInjection(options.prompt);
   if (injectionResult.isInjection) {
     categories.push("PROMPT_INJECTION");
   }
 
-  // 4. Policy Engine Check
   const policyDecision = evaluatePolicy(categories);
+  const policy_ms = Math.max(1, Math.round((performance.now() - policyStart) * 10) / 10);
 
   // If blocked at Inbound/Injection Stage: Immediately return 403 without upstream inference
   if (policyDecision.action === "BLOCK") {
-    accumulatedGatewayMs += performance.now() - startTime;
-    const roundedOverhead = Math.max(1, Math.round(accumulatedGatewayMs * 10) / 10);
+    const roundedOverhead = Math.max(1, Math.round((scan_ms + policy_ms) * 10) / 10);
 
     const auditEntry = globalAuditStore.addEntry({
       role: callerRole,
-      model_id: options.modelId,
+      model_id: options.modelId || "dry-run",
       action: "BLOCK",
       categories: policyDecision.categories,
       rule: policyDecision.rule,
@@ -317,11 +332,19 @@ export async function runGatewayPipeline(
         tokenized_prompt: inboundScan.tokenizedText,
         detected_entities: inboundScan.detectedEntities,
         audit_entry: auditEntry,
+        step_timings: {
+          scan_ms,
+          policy_ms,
+          rbac_ms: 0,
+          egress_ms: 0,
+          is_dry_run: options.modelId === "dry-run" || !findModelConfig(options.modelId),
+        },
       },
     };
   }
 
   // 5. Access-Controlled RAG (Role Filtered)
+  const rbacStart = performance.now();
   const ragResult = retrievePermittedRagChunks(inboundScan.tokenizedText, callerRole);
   if (ragResult.hasRbacViolation) {
     categories.push("RBAC_VIOLATION");
@@ -340,62 +363,80 @@ export async function runGatewayPipeline(
 
     promptForModel = `[ENTERPRISE CONTEXT (CLEARANCE VERIFIED)]:\n${ragContext}\n\n[USER INSTRUCTION]:\n${inboundScan.tokenizedText}`;
   }
+  const rbac_ms = Math.max(1, Math.round((performance.now() - rbacStart) * 10) / 10);
 
-  // Record gateway overhead up to Step 5
-  accumulatedGatewayMs += performance.now() - startTime;
-
-  // 6. Upstream Provider Adapter Call (Gateway timer is paused)
+  // 6. Upstream Provider Adapter Call or Dry Run Mode
+  const isDryRun = options.modelId === "dry-run" || !findModelConfig(options.modelId);
   let rawModelReply = "";
-  try {
-    const { adapter, modelName } = getProviderAdapter(options.modelId);
-    const messages = [
-      {
-        role: "system" as const,
-        content:
-          "You are an enterprise AI assistant behind Aegis Guard gateway. Answer helpfully using authorized enterprise context.",
-      },
-      {
-        role: "user" as const,
-        content: promptForModel,
-        imageBase64: options.attachments?.[0],
-      },
-    ];
+  let model_ms: number | undefined = undefined;
 
-    const generateResult = await adapter.generate({
-      messages,
-      model: modelName,
-      timeoutMs: 25000,
-    });
-    rawModelReply = generateResult.text;
-  } catch (err: unknown) {
-    const errMessage = err instanceof Error ? err.message : "Provider failure";
-    return {
-      isBlocked: false,
-      status: 502,
-      error: `Upstream AI provider error: ${errMessage}`,
-      result: {
-        action: "BLOCK",
-        categories,
-        rule: "Provider execution failed",
-        overhead_ms: Math.round(accumulatedGatewayMs),
-        masked_prompt: inboundScan.hiddenLengthBlocks,
-        hidden_length_blocks: inboundScan.hiddenLengthBlocks,
-        tokenized_prompt: inboundScan.tokenizedText,
-        detected_entities: inboundScan.detectedEntities,
-      },
-    };
+  if (isDryRun) {
+    rawModelReply = "Dry run: no model was called.";
+  } else {
+    const modelStart = performance.now();
+    try {
+      const { adapter, modelName } = getProviderAdapter(options.modelId);
+      const messages = [
+        {
+          role: "system" as const,
+          content:
+            "You are an enterprise AI assistant behind Aegis Guard gateway. Answer helpfully using authorized enterprise context.",
+        },
+        {
+          role: "user" as const,
+          content: promptForModel,
+          imageBase64: options.attachments?.[0],
+        },
+      ];
+
+      const generateResult = await adapter.generate({
+        messages,
+        model: modelName,
+        timeoutMs: 25000,
+      });
+      rawModelReply = generateResult.text;
+      model_ms = Math.max(1, Math.round((performance.now() - modelStart) * 10) / 10);
+    } catch (err: unknown) {
+      const errMessage = err instanceof Error ? err.message : "Provider failure";
+      return {
+        isBlocked: false,
+        status: 502,
+        error: `Upstream AI provider error: ${errMessage}`,
+        result: {
+          action: "BLOCK",
+          categories,
+          rule: "Provider execution failed",
+          overhead_ms: Math.round(scan_ms + policy_ms + rbac_ms),
+          masked_prompt: inboundScan.hiddenLengthBlocks,
+          hidden_length_blocks: inboundScan.hiddenLengthBlocks,
+          tokenized_prompt: inboundScan.tokenizedText,
+          detected_entities: inboundScan.detectedEntities,
+          step_timings: {
+            scan_ms,
+            policy_ms,
+            rbac_ms,
+            model_ms: Math.round(performance.now() - modelStart),
+            egress_ms: 0,
+            is_dry_run: false,
+          },
+        },
+      };
+    }
   }
 
-  // 7. Outbound Egress Scan (Resume gateway timer)
-  const egressStartTime = performance.now();
+  // 7. Outbound Egress Scan
+  const egressStart = performance.now();
   const egressScan = scanOutboundEgress(rawModelReply);
 
   if (egressScan.isCanaryLeaked) {
     categories.push("CANARY_EGRESS");
   }
 
-  accumulatedGatewayMs += performance.now() - egressStartTime;
-  const totalGatewayOverhead = Math.max(1, Math.round(accumulatedGatewayMs * 10) / 10);
+  const egress_ms = Math.max(1, Math.round((performance.now() - egressStart) * 10) / 10);
+  const totalGatewayOverhead = Math.max(
+    1,
+    Math.round((scan_ms + policy_ms + rbac_ms + egress_ms) * 10) / 10
+  );
 
   // 8. Re-evaluate policy with any egress threats
   const finalPolicy = evaluatePolicy(categories);
@@ -406,7 +447,7 @@ export async function runGatewayPipeline(
   // 9. Cryptographically linked audit entry
   const auditEntry = globalAuditStore.addEntry({
     role: callerRole,
-    model_id: options.modelId,
+    model_id: options.modelId || "dry-run",
     action: finalPolicy.action,
     categories: finalPolicy.categories,
     rule: finalPolicy.rule,
@@ -417,6 +458,15 @@ export async function runGatewayPipeline(
     })),
     overhead_ms: totalGatewayOverhead,
   });
+
+  const step_timings: StepTimings = {
+    scan_ms,
+    policy_ms,
+    rbac_ms,
+    model_ms: isDryRun ? undefined : model_ms,
+    egress_ms,
+    is_dry_run: isDryRun,
+  };
 
   return {
     isBlocked: false,
@@ -433,6 +483,7 @@ export async function runGatewayPipeline(
       detected_entities: inboundScan.detectedEntities,
       rag_chunks_included: ragIncludedTitles,
       audit_entry: auditEntry,
+      step_timings,
     },
   };
 }

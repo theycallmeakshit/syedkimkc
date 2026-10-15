@@ -188,7 +188,7 @@ export const SocInspector: React.FC<SocInspectorProps> = ({
           <Scan className="w-3.5 h-3.5" />
           <span>Visual Redaction (cv2)</span>
           {currentResponse?.ocrData && currentResponse.ocrData.redacted_count > 0 && (
-            <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+            <span className="w-2 h-2 rounded-sm bg-rose-500 animate-pulse" />
           )}
         </button>
 
