@@ -48,7 +48,6 @@ export interface StepTimings {
   model_ms?: number;
   egress_ms: number;
   is_dry_run?: boolean;
-  gateway_rule_answer?: boolean;
 }
 
 export interface ServerInspectionResult {
@@ -60,7 +59,6 @@ export interface ServerInspectionResult {
   hidden_length_blocks: string;
   tokenized_prompt: string;
   detected_entities: PipelineEntityItem[];
-  derived_facts_block?: string;
   rag_chunks_included?: string[];
   step_timings?: StepTimings;
   audit_entry?: {
@@ -1220,9 +1218,19 @@ export default function AegisConversationalApp() {
 
                       {/* Inline Masking Advisory Tag */}
                       {isMasked && (
-                        <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg text-xs font-medium border text-amber-400 bg-amber-400/10 border-amber-400/20 w-fit">
-                          <Shield className="w-3.5 h-3.5 shrink-0" />
+                        <div className="inline-flex items-center flex-wrap gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border text-amber-400 bg-amber-400/10 border-amber-400/20">
+                          <Shield className="w-3.5 h-3.5" />
                           <span>Sensitive entities sanitized before model dispatch</span>
+                          <button
+                            onClick={() => {
+                              if (msg.result) setLatestResult(msg.result);
+                              setInspectorTab("diff");
+                              setIsInspectorOpen(true);
+                            }}
+                            className="underline hover:text-amber-300 font-semibold ml-1 cursor-pointer"
+                          >
+                            [Inspect payload]
+                          </button>
                         </div>
                       )}
 
@@ -1300,10 +1308,10 @@ export default function AegisConversationalApp() {
                               setInspectorTab("diff");
                               setIsInspectorOpen(true);
                             }}
-                            className="inline-flex items-center gap-1.5 text-[11px] text-zinc-400 hover:text-zinc-200 transition-colors duration-150"
+                            className="inline-flex items-center gap-1 text-[11px] text-zinc-400 hover:text-zinc-200 transition-colors duration-150"
                           >
-                            <FileText className="w-3.5 h-3.5" />
-                            <span>Inspect payload</span>
+                            <FileText className="w-3 h-3" />
+                            <span>View payload inspection</span>
                           </button>
                         )}
                       </div>
@@ -1418,19 +1426,6 @@ export default function AegisConversationalApp() {
                             {latestResult.tokenized_prompt || "(Zero data forwarded)"}
                           </div>
                         </div>
-
-                        {/* Section 3: Derived Format Facts */}
-                        {latestResult.derived_facts_block && (
-                          <div className="space-y-1.5">
-                            <div className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider flex items-center justify-between">
-                              <span>Derived format facts (System instructions)</span>
-                              <span className="text-emerald-400 text-[10px]">Internal Facts</span>
-                            </div>
-                            <div className="p-3 rounded-xl border border-zinc-800 bg-zinc-900 text-zinc-200 font-mono text-xs leading-relaxed whitespace-pre-wrap break-all">
-                              {latestResult.derived_facts_block}
-                            </div>
-                          </div>
-                        )}
 
                         {/* Detected Entities */}
                         {latestResult.detected_entities && latestResult.detected_entities.length > 0 && (
