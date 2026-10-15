@@ -194,7 +194,7 @@ export const VisualRedactionViewer: React.FC<VisualRedactionViewerProps> = ({ oc
                     )}
                   </td>
                   <td className="py-2 px-3 text-emerald-400 font-bold text-[11px]">
-                    {item.replacement_token || "None"}
+                    {item.replacement_token || "—"}
                   </td>
                 </tr>
               ))}

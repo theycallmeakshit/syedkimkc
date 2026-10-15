@@ -192,7 +192,7 @@ export const AuditLogTable: React.FC<AuditLogTableProps> = ({ logs, onRefresh })
                 </div>
                 <div className="p-2 rounded bg-slate-950">
                   <div className="text-[10px] text-slate-500">RBAC Blocked</div>
-                  <div className="text-zinc-300 font-bold text-sm">{selectedEntry.ragQuarantinedCount}</div>
+                  <div className="text-purple-400 font-bold text-sm">{selectedEntry.ragQuarantinedCount}</div>
                 </div>
                 <div className="p-2 rounded bg-slate-950">
                   <div className="text-[10px] text-slate-500">Total Latency</div>

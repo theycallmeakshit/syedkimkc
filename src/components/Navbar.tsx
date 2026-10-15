@@ -50,9 +50,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onResetSession, isBackendHealthy
 
           {/* Canary token badge */}
           <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-900 border border-slate-800 text-xs font-mono">
-            <Terminal className="w-3.5 h-3.5 text-amber-400" />
+            <Terminal className="w-3.5 h-3.5 text-purple-400" />
             <span className="text-slate-400">Active Canary:</span>
-            <span className="text-amber-300 font-semibold truncate max-w-[160px]" title={CANARY_TOKENS[0]}>
+            <span className="text-purple-300 font-semibold truncate max-w-[160px]" title={CANARY_TOKENS[0]}>
               {CANARY_TOKENS[0].slice(0, 18)}...
             </span>
           </div>
