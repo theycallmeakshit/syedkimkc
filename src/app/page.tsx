@@ -836,14 +836,14 @@ export default function AegisConversationalApp() {
         {/* COLLAPSED ICON RAIL VIEW (When sidebar is collapsed on desktop) */}
         {!isSidebarOpen && !isMobile ? (
           <div className="flex flex-col items-center py-3 gap-2 shrink-0 h-full">
-            {/* Expand Toggle */}
+            {/* Expand Toggle with OPAQUE logo */}
             <button
               onClick={handleToggleSidebar}
-              title="Expand sidebar"
+              title="Expand OPAQUE sidebar"
               aria-label="Expand sidebar"
-              className="p-2 rounded-lg text-zinc-400 hover:text-zinc-200 glass-sidebar-surface"
+              className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 glass-sidebar-surface flex items-center justify-center"
             >
-              <PanelLeftOpen className="w-4 h-4" />
+              <img src="/opaque-logo.jpg" alt="OPAQUE" className="w-5 h-5 object-contain rounded" />
             </button>
 
             {/* New chat icon button */}
@@ -955,9 +955,12 @@ export default function AegisConversationalApp() {
           <>
             {/* Top Wordmark & Collapse Button */}
             <div className="p-3 border-b border-white/8 flex items-center justify-between shrink-0">
-              <div className="flex items-center gap-2 font-semibold text-sm text-zinc-100">
-                <Shield className="w-4 h-4 text-emerald-500" />
-                <span>Aegis Guard</span>
+              <div className="flex items-center gap-2.5 font-semibold text-sm text-zinc-100">
+                <img src="/opaque-logo.jpg" alt="OPAQUE Logo" className="w-6 h-6 object-contain rounded" />
+                <div className="flex flex-col leading-tight">
+                  <span className="font-bold tracking-tight">OPAQUE</span>
+                  <span className="text-[9px] font-mono text-emerald-400 tracking-wider">PRIVACY-FIRST LLM</span>
+                </div>
               </div>
               <button
                 onClick={handleToggleSidebar}
@@ -1300,9 +1303,9 @@ export default function AegisConversationalApp() {
             {/* Wordmark when sidebar is closed or on mobile */}
             {(!isSidebarOpen || isMobile) && (
               <div className="flex items-center gap-2 font-semibold text-xs text-zinc-300">
-                <Shield className="w-4 h-4 text-emerald-400" />
-                <span>Aegis Guard</span>
-                <span className="text-[10px] font-mono text-zinc-500 border border-white/5 px-1.5 py-0.5 rounded">Security Gateway</span>
+                <img src="/opaque-logo.jpg" alt="OPAQUE Logo" className="w-5 h-5 object-contain rounded" />
+                <span className="font-bold tracking-tight text-zinc-100">OPAQUE</span>
+                <span className="text-[10px] font-mono text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded">Privacy-First LLM</span>
               </div>
             )}
           </div>
@@ -1311,18 +1314,18 @@ export default function AegisConversationalApp() {
           <div className="flex items-center gap-2">
             <Link
               href="/login"
-              aria-label="Enterprise Login Portal"
+              aria-label="OPAQUE Login Portal"
               title={
                 currentUser
-                  ? `${currentUser.name} (L${currentUser.classification_level} ${currentUser.clearance}) - Login Portal`
-                  : "Sign In / Enterprise Login Portal"
+                  ? `${currentUser.name} (L${currentUser.classification_level} ${currentUser.clearance}) - OPAQUE Portal`
+                  : "Sign In - OPAQUE Privacy-First LLM"
               }
-              className="flex items-center justify-center w-8 h-8 rounded-lg border border-white/10 glass-sidebar-surface text-zinc-300 hover:text-emerald-400 hover:border-emerald-500/30 transition-colors duration-150 relative group"
+              className="flex items-center justify-center w-8 h-8 rounded-lg border border-white/10 glass-sidebar-surface text-zinc-300 hover:border-emerald-500/30 transition-colors duration-150 relative group overflow-hidden p-1"
             >
               {currentUser ? (
                 <span className="text-sm">{currentUser.avatar}</span>
               ) : (
-                <Shield className="w-4 h-4 text-emerald-400" />
+                <img src="/opaque-logo.jpg" alt="OPAQUE" className="w-full h-full object-contain rounded" />
               )}
               {currentUser && (
                 <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-sm bg-emerald-400 border border-zinc-950"></span>
@@ -1339,13 +1342,13 @@ export default function AegisConversationalApp() {
               {/* Empty State / Welcome Screen */}
               {chatHistory.length === 0 && (
                 <div className="pt-16 sm:pt-20 text-center space-y-4">
-                  <div className="w-10 h-10 rounded-xl mx-auto flex items-center justify-center border border-zinc-700 bg-zinc-800 text-zinc-100 shadow-sm">
-                    <Shield className="w-5 h-5 text-emerald-500" />
+                  <div className="w-12 h-12 rounded-xl mx-auto flex items-center justify-center border border-white/10 bg-zinc-900 shadow-sm overflow-hidden p-1.5">
+                    <img src="/opaque-logo.jpg" alt="OPAQUE Logo" className="w-full h-full object-contain rounded" />
                   </div>
 
                   <div className="space-y-1">
                     <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-zinc-100">
-                      Test the gateway
+                      OPAQUE AI Security Gateway
                     </h1>
                     <p className="text-xs sm:text-sm max-w-md mx-auto text-zinc-400">
                       Prompts are evaluated for sensitive identifiers, prompt injections, and role access permissions before dispatch to models.

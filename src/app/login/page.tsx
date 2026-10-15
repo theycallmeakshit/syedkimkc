@@ -172,17 +172,17 @@ export default function StandaloneLoginPage() {
         >
           {/* Logo & Title */}
           <div className="flex flex-col items-center text-center space-y-2">
-            <div className="w-14 h-14 rounded-2xl bg-zinc-900 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shadow-lg shadow-emerald-500/10">
-              <Shield className="w-8 h-8" />
+            <div className="w-16 h-16 rounded-2xl bg-zinc-900 border border-emerald-500/30 flex items-center justify-center shadow-lg shadow-emerald-500/10 overflow-hidden p-1.5">
+              <img src="/opaque-logo.jpg" alt="OPAQUE Logo" className="w-full h-full object-contain rounded" />
             </div>
             <div className="space-y-1">
               <div className="flex items-center justify-center gap-2">
                 <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-100">
-                  AEGIS<span className="text-emerald-400">-AI</span> Security Gateway
+                  OPAQUE<span className="text-emerald-400"> AI</span> Security Gateway
                 </h1>
               </div>
               <p className="text-xs text-zinc-400 max-w-md mx-auto">
-                CyberCup 6.0 Enterprise Authentication Portal &bull; Zero-Trust Access Control (RBAC)
+                Privacy-First Enterprise Gateway &bull; Zero-Trust Access Control (RBAC)
               </p>
             </div>
           </div>
