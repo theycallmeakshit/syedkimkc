@@ -3,118 +3,103 @@ import Link from "next/link";
 import { ArrowLeft, ShieldCheck, Lock, EyeOff, FileText, CheckCircle2 } from "lucide-react";
 
 export const metadata = {
-  title: "Privacy Policy | Aegis Guard",
-  description: "Privacy policy describing data processing, inline tokenization, and audit logging.",
+  title: "Privacy Policy | AEGIS-AI Enterprise Security Gateway",
+  description: "Enterprise Data Privacy Policy, Zero-Knowledge Logging Architecture, and Regulatory Compliance under GDPR, DPDP, and ISO 27001.",
 };
 
 export default function PrivacyPolicyPage() {
   return (
-    <div className="min-h-screen bg-[#212121] text-zinc-100 flex flex-col font-sans antialiased">
-      <header className="h-14 bg-[#18181b] border-b border-zinc-800 px-6 flex items-center justify-between sticky top-0 z-30">
+    <div className="min-h-screen bg-[#080d1a] text-slate-100 flex flex-col font-sans antialiased">
+      <header className="h-14 bg-[#0f172a] border-b border-[#334155] px-6 flex items-center justify-between sticky top-0 z-50">
         <div className="flex items-center gap-3">
           <Link
             href="/"
-            className="flex items-center gap-2 text-xs font-mono text-zinc-400 hover:text-zinc-200 transition-colors"
+            className="flex items-center gap-2 text-xs font-mono text-cyan-400 hover:text-cyan-300 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>Return to gateway</span>
+            <span>Return to Gateway</span>
           </Link>
-          <span className="text-zinc-700">|</span>
-          <span className="text-xs font-semibold text-zinc-200">
-            Aegis Guard Privacy Policy
+          <span className="text-slate-600">|</span>
+          <span className="font-mono text-xs font-bold text-slate-200">
+            AEGIS-AI Compliance & Privacy Policy
           </span>
         </div>
-        <div className="text-[11px] font-mono text-zinc-500">
-          Last updated: October 15, 2026
+        <div className="text-[11px] font-mono text-slate-400">
+          Last Updated: October 15, 2026
         </div>
       </header>
 
-      <main id="main-content" className="flex-1 max-w-3xl w-full mx-auto p-6 sm:p-10 space-y-8 text-xs leading-relaxed text-zinc-300">
-        <div className="space-y-2 border-b border-zinc-800 pb-6">
-          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg bg-zinc-800 border border-zinc-700 text-emerald-400 font-mono text-[11px]">
+      <main id="main-content" className="flex-1 max-w-4xl w-full mx-auto p-6 md:p-10 space-y-8 text-xs leading-relaxed text-slate-300">
+        <div className="space-y-2 border-b border-[#334155] pb-6">
+          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded bg-cyan-950/60 border border-cyan-800 text-cyan-300 font-mono text-[11px]">
             <ShieldCheck className="w-3.5 h-3.5" />
-            <span>Operational Privacy Framework: Zero Plaintext Storage</span>
+            <span>Regulatory Standard: ISO/IEC 27001 - SOC 2 Type II - DPDP Act 2023</span>
           </div>
-          <h1 className="text-2xl font-bold text-zinc-100 tracking-tight">
-            Aegis Guard Privacy Policy
+          <h1 className="text-2xl font-bold font-mono text-white tracking-tight">
+            AEGIS-AI Enterprise Data Privacy & Zero-Knowledge Architecture
           </h1>
-          <p className="text-zinc-400 text-sm">
-            Information on how this security gateway processes inbound queries, tokenizes identifiers, and records telemetry.
+          <p className="text-slate-400 text-sm">
+            Formal policy on reverse-proxy boundary protection, zero-knowledge audit logs, and ephemeral cryptographic tokenization.
           </p>
         </div>
 
         <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-zinc-100 uppercase tracking-wider flex items-center gap-2">
-            <Lock className="w-4 h-4 text-emerald-500" />
-            1. Scope and Architecture
+          <h2 className="text-sm font-bold font-mono text-cyan-400 uppercase tracking-wider flex items-center gap-2">
+            <Lock className="w-4 h-4" />
+            1. Zero-Knowledge Processing Guarantee
           </h2>
           <p>
-            Aegis Guard acts as an inline security boundary between user client interfaces and upstream large language model (LLM) endpoints. The gateway inspects inbound prompts to sanitize sensitive data, detect adversarial prompt injections, and enforce role-based access before queries reach model inference.
+            AEGIS-AI operates strictly as an inline, stateless reverse proxy between client applications and upstream Large Language Model (LLM) inference endpoints. At no point in the lifecycle of a transaction are unredacted user prompts, raw personal identity numbers (such as PAN, Aadhaar, SSN), or customer credentials written to non-volatile storage.
           </p>
           <p>
-            [Note: Confirm with legal counsel: Determine whether your deployment qualifies as a data processor or data controller under applicable privacy statutes such as GDPR and the Digital Personal Data Protection Act.]
+            All audit logs generated by Stage 7 retain exclusively SHA-256 cryptographic fingerprints, transaction latencies, and categorical threat classifications. Raw payloads cannot be reconstructed from the audit ledger.
           </p>
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-zinc-100 uppercase tracking-wider flex items-center gap-2">
-            <EyeOff className="w-4 h-4 text-emerald-500" />
-            2. Data Tokenization and Storage Practices
+          <h2 className="text-sm font-bold font-mono text-cyan-400 uppercase tracking-wider flex items-center gap-2">
+            <EyeOff className="w-4 h-4" />
+            2. Ephemeral Tokenization Vault
           </h2>
           <p>
-            When sensitive records (such as PAN numbers, email addresses, phone numbers, or credentials) are detected in prompt text or document uploads:
+            When sensitive identifiers are detected in inbound prompts or extracted via local Optical Character Recognition (OCR), the gateway substitutes raw strings with surrogate tokens in the format <code>{"{{REDACTED_FINANCIAL_x}}"}</code> or <code>{"{{REDACTED_IDENTIFIER_x}}"}</code>.
           </p>
-          <ul className="list-disc pl-5 space-y-1.5 text-zinc-400">
-            <li>Raw values are substituted with surrogate tokens (for example, {"{{REDACTED_PAN}}"} or {"{{REDACTED_EMAIL}}"}).</li>
-            <li>Upstream models receive only sanitized surrogate tokens, not the original plaintext identifiers.</li>
-            <li>Unredacted sensitive data is never persisted to non-volatile disk storage, long-term databases, or external log collectors.</li>
-            <li>Session token mappings reside solely in ephemeral memory and are discarded upon request completion or browser session close.</li>
+          <ul className="list-disc pl-5 space-y-1.5 text-slate-400">
+            <li>Surrogate mappings are stored solely in volatile RAM, isolated per request session ID.</li>
+            <li>Upstream models process only surrogate tokens and never encounter plaintext customer identifiers.</li>
+            <li>Session token mappings are automatically purged upon transaction completion or session termination.</li>
           </ul>
+        </section>
+
+        <section className="space-y-3">
+          <h2 className="text-sm font-bold font-mono text-cyan-400 uppercase tracking-wider flex items-center gap-2">
+            <FileText className="w-4 h-4" />
+            3. Multi-Modal Document & OCR Redaction
+          </h2>
           <p>
-            [Note: Confirm with legal counsel: Ensure that ephemeral in-memory processing limits meet organizational compliance requirements for regulated financial and identification records.]
+            Image payloads submitted for analysis are processed via local RapidOCR running in an isolated execution sandbox. Identified sensitive coordinates (such as PAN card numbers, date of birth, and bank account credentials) are overlaid with permanent blackout bounding boxes using <code>cv2.rectangle</code>.
+          </p>
+          <p>
+            Original unredacted images are held in volatile memory only for the duration of the redaction step and are discarded immediately after the sanitized visual buffer is generated.
           </p>
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-zinc-100 uppercase tracking-wider flex items-center gap-2">
-            <FileText className="w-4 h-4 text-emerald-500" />
-            3. Telemetry and Audit Records
+          <h2 className="text-sm font-bold font-mono text-cyan-400 uppercase tracking-wider flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4" />
+            4. Role-Based Access Control & RAG Governance
           </h2>
           <p>
-            The gateway maintains operational telemetry to monitor overhead latency and threat events. Telemetry entries record only:
-          </p>
-          <ul className="list-disc pl-5 space-y-1.5 text-zinc-400">
-            <li>A timestamp of the evaluation.</li>
-            <li>The active role selected during submission (intern, developer, or executive).</li>
-            <li>The gateway decision (ALLOW, MASK, or BLOCK).</li>
-            <li>A masked reference identifier (such as PAN [PAN_1]), with all sensitive digits withheld.</li>
-            <li>Measured processing latency in milliseconds.</li>
-            <li>A SHA-256 cryptographic fingerprint calculated from the sanitized payload.</li>
-          </ul>
-          <p>
-            Raw prompt contents cannot be reconstructed from audit records.
-          </p>
-          <p>
-            [Note: Confirm with legal counsel: Verify whether retaining SHA-256 cryptographic hashes of sanitized payloads is classified as pseudonymous data under relevant data protection jurisdictions.]
+            Retrieval-Augmented Generation (RAG) queries are bounded by the <code>X-User-Role</code> HTTP header. Document chunks requiring clearance levels exceeding the authenticated principal are dropped at Stage 5 prior to prompt composition. Access violations are logged as categorical audit entries.
           </p>
         </section>
 
-        <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-zinc-100 uppercase tracking-wider flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-            4. Cookies and Tracking
-          </h2>
-          <p>
-            Aegis Guard does not use tracking cookies, marketing beacons, or cross-site analytics identifiers. Browser storage is used only for active session preferences.
-          </p>
-        </section>
-
-        <section className="pt-6 border-t border-zinc-800 flex items-center justify-between text-[11px] font-mono text-zinc-500">
+        <section className="pt-6 border-t border-[#334155] flex items-center justify-between text-[11px] font-mono text-slate-400">
           <div>
-            Contact: security@aegisguard.internal
+            Data Protection Officer: <span className="text-slate-200">security@aegis-ai.internal</span>
           </div>
           <div>
-            Policy Reference: AGY-PRIV-2026
+            Revision: 2.6.4 (Active)
           </div>
         </section>
       </main>

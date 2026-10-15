@@ -65,7 +65,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
           >
             Outbound Egress Guard
             {hasEgressChanges && (
-              <span className="w-2 h-2 rounded-sm bg-rose-500 animate-pulse" />
+              <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
             )}
           </button>
 
@@ -80,7 +80,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
             <Key className="w-3 h-3" />
             Token Vault Map
             {hasTokens && (
-              <span className="px-1.5 py-0.2 rounded-sm bg-slate-800 text-[10px] text-amber-300 font-mono">
+              <span className="px-1.5 py-0.2 rounded-full bg-slate-800 text-[10px] text-amber-300 font-mono">
                 {Object.keys(tokenVaultMap).length}
               </span>
             )}
@@ -100,7 +100,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
             <div className="rounded-xl border border-slate-800 bg-slate-900/60 overflow-hidden flex flex-col">
               <div className="flex items-center justify-between px-3 py-2 bg-slate-950/80 border-b border-slate-800">
                 <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-sm bg-rose-500" />
+                  <span className="w-2 h-2 rounded-full bg-rose-500" />
                   <span className="text-xs font-semibold text-slate-200">Raw Inbound Client Payload</span>
                 </div>
                 <button
@@ -120,7 +120,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
             <div className="rounded-xl border border-slate-800 bg-slate-900/60 overflow-hidden flex flex-col">
               <div className="flex items-center justify-between px-3 py-2 bg-slate-950/80 border-b border-slate-800">
                 <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-sm bg-emerald-500" />
+                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
                   <span className="text-xs font-semibold text-slate-200">Sanitized Transmitted Payload (To LLM)</span>
                 </div>
                 <button
@@ -203,7 +203,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
             <div className="rounded-xl border border-slate-800 bg-slate-900/60 overflow-hidden flex flex-col">
               <div className="px-3 py-2 bg-slate-950/80 border-b border-slate-800 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-sm bg-amber-500" />
+                  <span className="w-2 h-2 rounded-full bg-amber-500" />
                   <span className="text-xs font-semibold text-slate-200">Raw Model Response (Pre-Egress Filter)</span>
                 </div>
               </div>
@@ -216,7 +216,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
             <div className="rounded-xl border border-slate-800 bg-slate-900/60 overflow-hidden flex flex-col">
               <div className="px-3 py-2 bg-slate-950/80 border-b border-slate-800 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-sm bg-emerald-500" />
+                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
                   <span className="text-xs font-semibold text-slate-200">Delivered Client Response (Post-Egress Filter)</span>
                 </div>
               </div>

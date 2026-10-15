@@ -49,18 +49,18 @@ export const ThreatMetrics: React.FC<ThreatMetricsProps> = ({ metrics }) => {
       </div>
 
       <div className="flex items-center gap-2.5 p-2 rounded-lg bg-slate-950/60 border border-slate-800/80">
-        <div className="p-1.5 rounded-md bg-zinc-800 text-zinc-300">
+        <div className="p-1.5 rounded-md bg-cyan-500/10 text-cyan-400">
           <Lock className="w-4 h-4" />
         </div>
         <div>
           <div className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">RBAC Quarantined</div>
-          <div className="text-base font-bold text-zinc-300 font-mono">{metrics.rbacQuarantinedCount}</div>
+          <div className="text-base font-bold text-cyan-400 font-mono">{metrics.rbacQuarantinedCount}</div>
         </div>
       </div>
 
       <div className="flex items-center gap-2.5 p-2 rounded-lg bg-slate-950/60 border border-slate-800/80">
         <div className="p-1.5 rounded-md bg-emerald-500/10 text-emerald-400">
-          <ShieldCheck className="w-4 h-4" />
+          <Sparkles className="w-4 h-4" />
         </div>
         <div>
           <div className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">Canary Catches</div>

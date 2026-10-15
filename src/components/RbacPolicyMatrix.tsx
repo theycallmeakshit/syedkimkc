@@ -28,12 +28,12 @@ export const RbacPolicyMatrix: React.FC = () => {
       <div className="rounded-xl border border-slate-800 bg-slate-900/60 overflow-hidden">
         <div className="px-3.5 py-2.5 bg-slate-950/80 border-b border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Lock className="w-4 h-4 text-zinc-400" />
+            <Lock className="w-4 h-4 text-cyan-400" />
             <span className="font-semibold text-slate-200 text-xs">
               Role-Based Access Control (RBAC) Document Clearance Matrix
             </span>
           </div>
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-900 text-zinc-300 border border-zinc-700">
+          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
             Enforced at Stage 5
           </span>
         </div>
@@ -96,7 +96,7 @@ export const RbacPolicyMatrix: React.FC = () => {
             </p>
             <div className="space-y-1.5 font-mono text-[11px]">
               {CANARY_TOKENS.map((token, idx) => (
-                <div key={idx} className="p-2 rounded bg-slate-950 border border-slate-800 text-zinc-300 flex items-center justify-between">
+                <div key={idx} className="p-2 rounded bg-slate-950 border border-slate-800 text-amber-300 flex items-center justify-between">
                   <span className="truncate">{token}</span>
                   <span className="text-[10px] uppercase text-rose-400 bg-rose-950 px-1.5 py-0.5 rounded border border-rose-900">Tripwire</span>
                 </div>

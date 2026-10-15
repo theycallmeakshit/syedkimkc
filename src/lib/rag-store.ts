@@ -126,3 +126,85 @@ export function retrieveRagDocuments(query: string, userRole: UserRole): {
     rbacSummary
   };
 }
+
+
+export interface KnowledgeChunk {
+  id: string;
+  title: string;
+  min_role: "intern" | "developer" | "executive";
+  classification: "PUBLIC" | "INTERNAL" | "RESTRICTED";
+  keywords: string[];
+  content: string;
+}
+
+export const ROLE_HIERARCHY: Record<string, number> = {
+  intern: 1,
+  developer: 2,
+  executive: 3,
+};
+
+export const ENTERPRISE_KNOWLEDGE_CHUNKS: KnowledgeChunk[] = [
+  {
+    id: "DOC-PUBLIC-01",
+    title: "General Engineering Guidelines and Coding Standards",
+    min_role: "intern",
+    classification: "PUBLIC",
+    keywords: ["guidelines", "standards", "code", "style", "git", "onboarding"],
+    content: "Standard operating procedures require that all code be committed through branch PRs and peer-reviewed. No internal secrets or credentials may be checked into version control.",
+  },
+  {
+    id: "DOC-DEV-02",
+    title: "Internal Microservice Architecture and API Gateway Configuration",
+    min_role: "developer",
+    classification: "INTERNAL",
+    keywords: ["architecture", "microservice", "gateway", "backend", "api", "database"],
+    content: "The gateway runs an inline reverse-proxy boundary. Inbound requests pass through regex and heuristic sanitizers, while multi-modal documents run through in-memory OCR before reaching inference.",
+  },
+  {
+    id: "DOC-EXEC-03",
+    title: "Q4 Executive Compensation, Payroll Allocation and M&A Strategy",
+    min_role: "executive",
+    classification: "RESTRICTED",
+    keywords: ["compensation", "payroll", "salary", "executive", "q4", "strategy", "merger", "acquisition"],
+    content: "CONFIDENTIAL EXECUTIVE RECORD: Q4 executive compensation pool allocated at $24.8M against operational EBITDA benchmarks. Project Titan all-cash acquisition allocated at $142M for Tier-1 security assets.",
+  },
+];
+
+export interface RagRetrievalResult {
+  permittedChunks: KnowledgeChunk[];
+  blockedChunkTitles: string[];
+  hasRbacViolation: boolean;
+}
+
+export function retrievePermittedRagChunks(
+  query: string,
+  callerRole: "intern" | "developer" | "executive" | string
+): RagRetrievalResult {
+  const queryLower = query.toLowerCase();
+  const callerLevel = ROLE_HIERARCHY[callerRole] || 1;
+
+  const matchedChunks: KnowledgeChunk[] = [];
+  const blockedTitles: string[] = [];
+  let attemptedHigherRole = false;
+
+  for (const chunk of ENTERPRISE_KNOWLEDGE_CHUNKS) {
+    const matchesKeyword = chunk.keywords.some((kw) => queryLower.includes(kw));
+    const titleMatch = queryLower.includes(chunk.title.toLowerCase());
+
+    if (matchesKeyword || titleMatch) {
+      const requiredLevel = ROLE_HIERARCHY[chunk.min_role];
+      if (callerLevel >= requiredLevel) {
+        matchedChunks.push(chunk);
+      } else {
+        blockedTitles.push(chunk.title);
+        attemptedHigherRole = true;
+      }
+    }
+  }
+
+  return {
+    permittedChunks: matchedChunks,
+    blockedChunkTitles: blockedTitles,
+    hasRbacViolation: attemptedHigherRole,
+  };
+}

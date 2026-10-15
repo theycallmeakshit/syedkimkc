@@ -1,5 +1,5 @@
 # AEGIS-AI: Enterprise AI Security Gateway & SOC Dashboard
-> **CyberCup 6.0: Problem Statement CC6-AI03**  
+> **CyberCup 6.0 — Problem Statement CC6-AI03**  
 > *Middleware Reverse-Proxy Pattern for Enterprise LLMs & Access-Controlled RAG*
 
 ---
