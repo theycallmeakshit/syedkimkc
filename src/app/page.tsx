@@ -48,6 +48,7 @@ export interface StepTimings {
   model_ms?: number;
   egress_ms: number;
   is_dry_run?: boolean;
+  gateway_rule_answer?: boolean;
 }
 
 export interface ServerInspectionResult {
@@ -59,6 +60,7 @@ export interface ServerInspectionResult {
   hidden_length_blocks: string;
   tokenized_prompt: string;
   detected_entities: PipelineEntityItem[];
+  derived_facts_block?: string;
   rag_chunks_included?: string[];
   step_timings?: StepTimings;
   audit_entry?: {
@@ -134,17 +136,21 @@ function maskSensitiveForDisplay(text: string): string {
 
 function formatStepLine(timings?: StepTimings): string {
   if (!timings) return "";
-  const scan = `${timings.scan_ms}ms`;
-  const policy = `${timings.policy_ms}ms`;
-  const role = timings.rbac_ms > 0 ? `${timings.rbac_ms}ms` : "skipped";
-  const model = timings.is_dry_run
-    ? "skipped (dry run)"
-    : timings.model_ms !== undefined
-    ? `${timings.model_ms}ms`
-    : "skipped";
-  const egress = timings.egress_ms > 0 ? `${timings.egress_ms}ms` : "skipped";
-
-  return `Scan (${scan}) -> Policy (${policy}) -> Role check (${role}) -> Model (${model}) -> Output check (${egress})`;
+  if (timings.gateway_rule_answer) {
+    const gatewayMs = Math.round(timings.scan_ms + timings.policy_ms);
+    return `Answered by gateway rules (Gateway ${gatewayMs}ms)`;
+  }
+  const gatewayMs = Math.round(
+    timings.scan_ms + timings.policy_ms + timings.rbac_ms + timings.egress_ms
+  );
+  if (timings.is_dry_run) {
+    return `Gateway ${gatewayMs}ms, Dry run`;
+  }
+  if (timings.model_ms !== undefined) {
+    const modelSeconds = (timings.model_ms / 1000).toFixed(1);
+    return `Gateway ${gatewayMs}ms, Model ${modelSeconds}s`;
+  }
+  return `Gateway ${gatewayMs}ms`;
 }
 
 export default function AegisConversationalApp() {
@@ -165,6 +171,7 @@ export default function AegisConversationalApp() {
   // Input & Messaging
   const [promptInput, setPromptInput] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [elapsedTimeMs, setElapsedTimeMs] = useState<number>(0);
   const [attachedImage, setAttachedImage] = useState<string | null>(null);
   const [advisoryHint, setAdvisoryHint] = useState<{ text: string; type: "block" | "mask" } | null>(null);
   const [pasteWarning, setPasteWarning] = useState<string | null>(null);
@@ -212,6 +219,18 @@ export default function AegisConversationalApp() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  useEffect(() => {
+    if (!isSubmitting) {
+      setElapsedTimeMs(0);
+      return;
+    }
+    const start = performance.now();
+    const interval = setInterval(() => {
+      setElapsedTimeMs(Math.round(performance.now() - start));
+    }, 100);
+    return () => clearInterval(interval);
+  }, [isSubmitting]);
 
   const handleToggleSidebar = () => {
     setIsSidebarOpen((prev) => {
@@ -784,12 +803,12 @@ export default function AegisConversationalApp() {
       <aside
         className={`${
           isMobile
-            ? `fixed inset-y-0 left-0 z-50 w-[260px] bg-[#18181b] border-r border-zinc-800 transition-transform duration-200 motion-reduce:transition-none ${
+            ? `fixed inset-y-0 left-0 z-50 w-[260px] bg-zinc-900/70 backdrop-blur-xl border-r border-zinc-800/60 transition-transform duration-200 motion-reduce:transition-none ${
                 isSidebarOpen ? "translate-x-0" : "-translate-x-full"
               }`
             : `${
                 isSidebarOpen ? "w-[260px]" : "w-0 -translate-x-full"
-              } shrink-0 bg-[#18181b] border-r border-zinc-800 transition-all duration-200 motion-reduce:transition-none overflow-hidden flex flex-col h-screen`
+              } shrink-0 bg-zinc-900/70 backdrop-blur-xl border-r border-zinc-800/60 transition-all duration-200 motion-reduce:transition-none overflow-hidden flex flex-col h-screen`
         } flex flex-col`}
       >
         {/* Top Wordmark & New Chat Button */}
